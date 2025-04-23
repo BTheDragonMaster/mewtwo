@@ -1,4 +1,4 @@
-from mewtwo.embeddings.bases import BasePair, Base
+from mewtwo.embeddings.bases import BasePair
 from mewtwo.embeddings.sequence import RNASequence
 
 

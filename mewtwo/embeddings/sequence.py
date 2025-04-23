@@ -1,6 +1,6 @@
 from enum import Flag
 from typing import Union
-from mewtwo.embeddings.bases import Base, DNA_BASES, RNA_BASES
+from mewtwo.embeddings.bases import Base
 
 
 class SeqType(Flag):
@@ -40,14 +40,14 @@ class Sequence:
             if self.seq_type == SeqType.DNA:
                 try:
                     base = Base[character]
-                    if base not in DNA_BASES:
+                    if base not in Base.DNA:
                         raise ValueError(f"DNA sequence must be comprised of bases A, T, C, and G. Found {character} in {self.sequence}")
                 except KeyError:
                     raise ValueError(f"DNA sequence must be comprised of bases A, T, C, and G. Found {character} in {self.sequence}")
             elif self.seq_type == SeqType.RNA:
                 try:
                     base = Base[character]
-                    if base not in RNA_BASES:
+                    if base not in Base.RNA:
                         raise ValueError(f"RNA sequence must be comprised of bases A, C, G and U. Found {character} in {self.sequence}")
                 except KeyError:
                     raise ValueError(f"RNA sequence must be comprised of bases A, C, G, and U. Found {character} in {self.sequence}")

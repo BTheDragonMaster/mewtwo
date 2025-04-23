@@ -9,13 +9,13 @@ class Base(Flag):
     G = 4
     T = 8
     U = 16
+    DNA = A | T | G | C
+    RNA = A | U | G | C
+    PURINES = A | G
+    PYRIMIDINES = C | T | U
 
     def __repr__(self):
         return self.name
-
-
-DNA_BASES = Base.A | Base.T | Base.G | Base.C
-RNA_BASES = Base.A | Base.U | Base.G | Base.C
 
 WATSON_CRICK_PAIRS = [Base.A | Base.T,
                       Base.A | Base.U,
