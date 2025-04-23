@@ -1,27 +1,34 @@
 import unittest
 from mewtwo.embeddings.terminator.stem import Stem
-from mewtwo.embeddings.bases import BasePair
+from mewtwo.embeddings.bases import BasePair, Base
 
 
 class TestStem(unittest.TestCase):
     def test_get_basepairs(self):
-        simple_stem = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair('A', 'T', True)]
-        upstream_bulge = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair('A', None, False),
-                          BasePair('T', 'A', True)]
-        downstream_bulge = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair(None, 'T', False),
-                          BasePair('T', 'A', True)]
-        mismatch = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair('T', 'T', False),
-                          BasePair('T', 'A', True)]
-        mismatched_closing_stack = [BasePair('G', 'G', False), BasePair('A', 'T', True), BasePair('A', 'T', True),
-                                    BasePair('T', 'A', True)]
-        double_upstream_bulge = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair('A', None, False),
-                                 BasePair('A', None, False), BasePair('T', 'A', True)]
-        double_downstream_bulge = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair(None, 'T', False),
-                                   BasePair(None, 'T', False), BasePair('T', 'A', True)]
-        upstream_mismatch_bulge = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair('A', 'C', False),
-                                   BasePair('A', None, False), BasePair('T', 'A', True)]
-        downstream_mismatch_bulge = [BasePair('G', 'C', True), BasePair('A', 'T', True), BasePair('C', 'T', False),
-                                     BasePair(None, 'T', False), BasePair('T', 'A', True)]
+        simple_stem = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                       BasePair(Base['A'], Base['T'], True)]
+        upstream_bulge = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                          BasePair(Base['A'], None, False),
+                          BasePair(Base['T'], Base['A'], True)]
+        downstream_bulge = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                            BasePair(None, Base['T'], False),
+                            BasePair(Base['T'], Base['A'], True)]
+        mismatch = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                    BasePair(Base['T'], Base['T'], False), BasePair(Base['T'], Base['A'], True)]
+        mismatched_closing_stack = [BasePair(Base['G'], Base['G'], False), BasePair(Base['A'], Base['T'], True),
+                                    BasePair(Base['A'], Base['T'], True), BasePair(Base['T'], Base['A'], True)]
+        double_upstream_bulge = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                                 BasePair(Base['A'], None, False),
+                                 BasePair(Base['A'], None, False), BasePair(Base['T'], Base['A'], True)]
+        double_downstream_bulge = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                                   BasePair(None, Base['T'], False),
+                                   BasePair(None, Base['T'], False), BasePair(Base['T'], Base['A'], True)]
+        upstream_mismatch_bulge = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                                   BasePair(Base['A'], Base['C'], False),
+                                   BasePair(Base['A'], None, False), BasePair(Base['T'], Base['A'], True)]
+        downstream_mismatch_bulge = [BasePair(Base['G'], Base['C'], True), BasePair(Base['A'], Base['T'], True),
+                                     BasePair(Base['C'], Base['T'], False),
+                                     BasePair(None, Base['T'], False), BasePair(Base['T'], Base['A'], True)]
 
         self.assertEqual(simple_stem, Stem('GAA', '(((', 'TTC', ')))').get_basepairs())
         self.assertEqual(upstream_bulge, Stem('GAAT', '((.(', 'ATC', ')))').get_basepairs())

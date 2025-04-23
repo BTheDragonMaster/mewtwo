@@ -1,4 +1,4 @@
-from mewtwo.embeddings.bases import BasePair
+from mewtwo.embeddings.bases import BasePair, Base
 
 
 class Stem:
@@ -21,18 +21,19 @@ class Stem:
         for i, character in enumerate(self.upstream_structure):
             if character == '(':
                 while reverse_downstream_structure[downstream_index] != ')':
-                    basepairs.append(BasePair(None, reverse_downstream_sequence[downstream_index], False))
+                    basepairs.append(BasePair(None, Base[reverse_downstream_sequence[downstream_index]], False))
                     downstream_index += 1
                 basepairs.append(
-                    BasePair(self.upstream_sequence[i], reverse_downstream_sequence[downstream_index], True))
+                    BasePair(Base[self.upstream_sequence[i]], Base[reverse_downstream_sequence[downstream_index]], True))
                 downstream_index += 1
 
             else:
                 if reverse_downstream_structure[downstream_index] == '.':
-                    basepairs.append(BasePair(self.upstream_sequence[i], reverse_downstream_sequence[downstream_index], False))
+                    basepairs.append(BasePair(Base[self.upstream_sequence[i]],
+                                              Base[reverse_downstream_sequence[downstream_index]], False))
                     downstream_index += 1
                 else:
-                    basepairs.append(BasePair(self.upstream_sequence[i], None, False))
+                    basepairs.append(BasePair(Base[self.upstream_sequence[i]], None, False))
 
         return basepairs
 
