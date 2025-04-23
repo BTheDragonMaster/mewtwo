@@ -1,6 +1,7 @@
 from mewtwo.embeddings.terminator.loop import Loop
 from mewtwo.embeddings.terminator.stem import Stem
 from mewtwo.embeddings.bases import BasePair, Base
+from mewtwo.embeddings.sequence import DNASequence, RNASequence, get_sequence_type, convert_to_rna, SeqType
 
 
 class Hairpin:
@@ -67,8 +68,13 @@ class RNAFoldHairpin(Hairpin):
 
     def __init__(self, hairpin_id, distance_to_pot, free_energy, hairpin_sequence, hairpin_structure):
         super().__init__(hairpin_id, distance_to_pot, "RNAFold")
-        self.hairpin_sequence = hairpin_sequence.upper()
-        self.hairpin_structure = hairpin_structure.upper()
+        seq_type = get_sequence_type(hairpin_sequence)
+        if SeqType.RNA in seq_type:
+            sequence = RNASequence(hairpin_sequence)
+        else:
+            sequence = convert_to_rna(DNASequence(hairpin_sequence))
+        self.hairpin_sequence = sequence
+        self.hairpin_structure = hairpin_structure
         self.free_energy = free_energy
 
 
@@ -81,9 +87,16 @@ class TransTermHPHairpin(Hairpin):
         self.hairpin_score = hairpin_score
 
     def set_hairpin_sequence(self, hairpin):
+
         hairpin_sequence = ''.join(hairpin.split())
         hairpin_sequence = hairpin_sequence.replace('-', '')
-        self.hairpin_sequence = hairpin_sequence.upper()
+
+        seq_type = get_sequence_type(hairpin_sequence)
+        if SeqType.RNA in seq_type:
+            sequence = RNASequence(hairpin_sequence)
+        else:
+            sequence = convert_to_rna(DNASequence(hairpin_sequence))
+        self.hairpin_sequence = sequence
 
     def set_hairpin_structure(self, hairpin):
         left_shoulder, loop, right_shoulder = hairpin.upper().split()

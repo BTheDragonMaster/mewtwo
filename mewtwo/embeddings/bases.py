@@ -10,16 +10,18 @@ class Base(Flag):
     T = 8
     U = 16
 
+    def __repr__(self):
+        return self.name
+
+
+DNA_BASES = Base.A | Base.T | Base.G | Base.C
+RNA_BASES = Base.A | Base.U | Base.G | Base.C
 
 WATSON_CRICK_PAIRS = [Base.A | Base.T,
-                      Base.T | Base.A,
                       Base.A | Base.U,
-                      Base.U | Base.A,
-                      Base.C | Base.G,
-                      Base.G | Base.C]
+                      Base.C | Base.G]
 
-WOBBLE_PAIRS = [Base.G | Base.U,
-                Base.U | Base.G]
+WOBBLE_PAIRS = [Base.G | Base.U]
 
 
 @dataclass
