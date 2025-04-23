@@ -1,22 +1,44 @@
 from typing import Optional
 from dataclasses import dataclass
+from enum import Flag
+
+
+class Base(Flag):
+    A = 1
+    C = 2
+    G = 4
+    T = 8
+    U = 16
+
+
+WATSON_CRICK_PAIRS = [Base.A | Base.T,
+                      Base.T | Base.A,
+                      Base.A | Base.U,
+                      Base.U | Base.A,
+                      Base.C | Base.G,
+                      Base.G | Base.C]
+
+WOBBLE_PAIRS = [Base.G | Base.U,
+                Base.U | Base.G]
 
 
 @dataclass
 class BasePair:
-    base_1: Optional[str]
-    base_2: Optional[str]
+    base_1: Optional[Base]
+    base_2: Optional[Base]
     h_bonded: bool
 
     def __repr__(self):
-        repr_base_1 = self.base_1
-        repr_base_2 = self.base_2
 
         if self.base_1 is None:
             repr_base_1 = ' '
+        else:
+            repr_base_1 = self.base_1.name
 
         if self.base_2 is None:
             repr_base_2 = ' '
+        else:
+            repr_base_2 = self.base_2.name
 
         if self.h_bonded:
             return f'{repr_base_1}-{repr_base_2}'
@@ -37,6 +59,19 @@ class BasePair:
         return True
 
     def __hash__(self):
-        return self.base_1, self.base_2, self.h_bonded
+        return hash((self.base_1, self.base_2, self.h_bonded))
+
+    def is_watson_crick(self):
+        if self.base_1 and self.base_2 and self.base_1 | self.base_2 in WATSON_CRICK_PAIRS:
+            return True
+
+        return False
+
+    def is_wobble(self):
+        if self.base_1 and self.base_2 and self.base_1 | self.base_2 in WOBBLE_PAIRS:
+            return True
+
+        return False
+
 
 
