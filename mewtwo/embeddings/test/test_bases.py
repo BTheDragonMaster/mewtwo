@@ -12,6 +12,15 @@ class TestBase(unittest.TestCase):
         self.assertEqual(base_to_vector(Base.T), [1, 2])
         self.assertEqual(base_to_vector(Base.ZERO_PADDING), [0, 0])
 
+        self.assertEqual(base_to_vector(Base.A, one_hot=True), [1, 0, 0, 0])
+        self.assertEqual(base_to_vector(Base.U, one_hot=True), [0, 0, 0, 1])
+        self.assertEqual(base_to_vector(Base.G, one_hot=True), [0, 0, 1, 0])
+        self.assertEqual(base_to_vector(Base.C, one_hot=True), [0, 1, 0, 0])
+        self.assertEqual(base_to_vector(Base.T, one_hot=True), [0, 0, 0, 1])
+        self.assertEqual(base_to_vector(Base.ZERO_PADDING, one_hot=True), [0, 0, 0, 0])
+
+        self.assertNotEqual(base_to_vector(Base.A, one_hot=True), [2, 2])
+
         with self.assertRaises(ValueError):
             base_to_vector(Base.DNA)
 

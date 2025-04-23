@@ -113,6 +113,3 @@ class BasePair:
             return True
 
         return False
-
-
-
