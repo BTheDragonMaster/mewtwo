@@ -1,7 +1,9 @@
 from mewtwo.parsers.tabular import Tabular
 from mewtwo.embeddings.terminator.hairpin import RNAFoldHairpin, TransTermHPHairpin
+from mewtwo.embeddings.bases import BasePair
 
 from sys import argv
+from pprint import pprint
 
 
 def rnafold_hairpins_from_termite(input_file, get_rnafold: bool = True, get_transtermhp: bool = False,
@@ -57,6 +59,8 @@ def rnafold_hairpins_from_termite(input_file, get_rnafold: bool = True, get_tran
 if __name__ == "__main__":
     hairpins = rnafold_hairpins_from_termite(argv[1], get_rnafold=True, get_transtermhp=True, species_column=True)
     counter = 0
+    basepairs_to_counts_rnafold = {}
+    basepairs_to_counts_transtermhp = {}
     for hairpin in hairpins:
         if hairpin.contains_multiple_hairpins():
             counter += 1
@@ -64,15 +68,24 @@ if __name__ == "__main__":
 
         else:
             loop, stem = hairpin.get_hairpin_parts()
-            print(stem.get_basepairs())
-            print(hairpin.hairpin_sequence)
-            print(hairpin.hairpin_structure)
-            print(stem.upstream_sequence)
-            print(stem.upstream_structure)
-            print(stem.downstream_sequence)
-            print(stem.downstream_structure)
+            for basepair in stem.get_basepairs():
+                if hairpin.prediction_software == 'RNAFold':
+
+                    if basepair not in basepairs_to_counts_rnafold:
+
+                        basepairs_to_counts_rnafold[basepair] = 0
+                    basepairs_to_counts_rnafold[basepair] += 1
+                else:
+                    if basepair not in basepairs_to_counts_transtermhp:
+                        basepairs_to_counts_transtermhp[basepair] = 0
+                    basepairs_to_counts_transtermhp[basepair] += 1
+                    if basepair == BasePair('A', 'A', True):
+                        print(hairpin.hairpin_sequence)
+                        print(hairpin.hairpin_structure)
 
     print(f"{counter} structures contain multiple hairpins")
+    pprint(basepairs_to_counts_rnafold)
+    pprint(basepairs_to_counts_transtermhp)
 
 
 
