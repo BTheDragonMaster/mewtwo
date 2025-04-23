@@ -11,4 +11,4 @@ setup(
     author_email="barbara.terlouw@wur.nl",
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    packages=["mewtwo"])
+    packages=find_packages(exclude="build"))
