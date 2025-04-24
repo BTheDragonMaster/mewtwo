@@ -39,7 +39,7 @@ def base_to_vector(base: Base, one_hot: bool = False) -> list[int]:
         if base not in BASE_TO_ONEHOT:
             raise ValueError(f"Not a base: {base}")
         else:
-            return BASE_TO_ONEHOT[base]
+            return BASE_TO_ONEHOT[base][:]
 
     else:
         if base in Base.PYRIMIDINES:
@@ -72,18 +72,18 @@ WOBBLE_PAIRS = [Base.G | Base.U]
 
 @dataclass
 class BasePair:
-    base_1: Optional[Base]
-    base_2: Optional[Base]
+    base_1: Base
+    base_2: Base
     h_bonded: bool
 
     def __repr__(self):
 
-        if self.base_1 is None:
+        if self.base_1 == Base.ZERO_PADDING:
             repr_base_1 = ' '
         else:
             repr_base_1 = self.base_1.name
 
-        if self.base_2 is None:
+        if self.base_2 == Base.ZERO_PADDING:
             repr_base_2 = ' '
         else:
             repr_base_2 = self.base_2.name
@@ -110,13 +110,13 @@ class BasePair:
         return hash((self.base_1, self.base_2, self.h_bonded))
 
     def is_watson_crick(self):
-        if self.base_1 and self.base_2 and self.base_1 | self.base_2 in WATSON_CRICK_PAIRS:
+        if self.base_1 | self.base_2 in WATSON_CRICK_PAIRS:
             return True
 
         return False
 
     def is_wobble(self):
-        if self.base_1 and self.base_2 and self.base_1 | self.base_2 in WOBBLE_PAIRS:
+        if self.base_1 | self.base_2 in WOBBLE_PAIRS:
             return True
 
         return False
