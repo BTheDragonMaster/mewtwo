@@ -1,4 +1,4 @@
-from mewtwo.embeddings.bases import BasePair
+from mewtwo.embeddings.bases import BasePair, Base, PairingType
 from mewtwo.embeddings.sequence import RNASequence
 
 
@@ -23,7 +23,7 @@ class Stem:
         for i, character in enumerate(self.upstream_structure):
             if character == '(':
                 while reverse_downstream_structure[downstream_index] != ')':
-                    basepairs.append(BasePair(None, reverse_downstream_sequence[downstream_index], False))
+                    basepairs.append(BasePair(Base.ZERO_PADDING, reverse_downstream_sequence[downstream_index], False))
                     downstream_index += 1
                 basepairs.append(
                     BasePair(self.upstream_sequence[i], reverse_downstream_sequence[downstream_index], True))
@@ -35,10 +35,20 @@ class Stem:
                                               reverse_downstream_sequence[downstream_index], False))
                     downstream_index += 1
                 else:
-                    basepairs.append(BasePair(self.upstream_sequence[i], None, False))
+                    basepairs.append(BasePair(self.upstream_sequence[i], Base.ZERO_PADDING, False))
 
         return basepairs
 
+    def to_vector(self, max_stem_size: int, one_hot: bool = False,
+                  pairing_type: PairingType = PairingType.STRUCTURE_BASED) -> list[int]:
+        vector = []
+        basepairs = self.get_basepairs()
+        assert max_stem_size >= len(basepairs)
+        for i in range(max_stem_size):
+            try:
+                basepair = basepairs[i]
+            except IndexError:
+                basepair = BasePair(Base.ZERO_PADDING, Base.ZERO_PADDING, False)
+            vector.extend(basepair.to_vector(one_hot=one_hot, pairing_type=pairing_type))
 
-    def to_vector(self, max_stem_size):
-        pass
+        return vector
