@@ -3,6 +3,13 @@ from dataclasses import dataclass
 from enum import Flag
 
 
+class PairingType(Flag):
+    STRUCTURE_BASED = 1
+    WATSON_CRICK = 2
+    WOBBLE = 4
+    WOBBLE_OR_WATSON_CRICK = WOBBLE | WATSON_CRICK
+
+
 class Base(Flag):
     A = 1
     C = 2
@@ -113,3 +120,30 @@ class BasePair:
             return True
 
         return False
+
+    def to_vector(self, one_hot: bool = False,
+                  pairing_type: PairingType = PairingType.STRUCTURE_BASED) -> list[int]:
+
+        vector = base_to_vector(self.base_1, one_hot)
+        vector.extend(base_to_vector(self.base_2, one_hot))
+        if pairing_type == PairingType.WOBBLE_OR_WATSON_CRICK:
+
+            if self.is_watson_crick() or self.is_wobble():
+                vector.append(1)
+            else:
+                vector.append(0)
+
+        elif pairing_type == PairingType.STRUCTURE_BASED:
+            if self.h_bonded:
+                vector.append(1)
+            else:
+                vector.append(0)
+        elif pairing_type == PairingType.WATSON_CRICK:
+            if self.is_watson_crick():
+                vector.append(1)
+            else:
+                vector.append(0)
+        else:
+            raise ValueError(f"Pairing type must be structure-based, Watson-Crick, or a combination of Watson-Crick and Wobble. Got {pairing_type.name}")
+
+        return vector

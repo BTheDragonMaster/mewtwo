@@ -1,6 +1,6 @@
 import unittest
 
-from mewtwo.embeddings.bases import Base, base_to_vector, BasePair
+from mewtwo.embeddings.bases import Base, base_to_vector, BasePair, PairingType
 
 
 class TestBase(unittest.TestCase):
@@ -41,6 +41,23 @@ class TestBasePair(unittest.TestCase):
         self.assertTrue(BasePair(Base.U, Base.G, True).is_wobble())
         self.assertFalse(BasePair(Base.G, Base.T, True).is_wobble())
         self.assertFalse(BasePair(Base.T, Base.G, True).is_wobble())
+
+    def test_to_vector(self):
+        base_pair_1 = BasePair(Base.G, Base.U, False)
+        base_pair_2 = BasePair(Base.A, Base.U, True)
+
+        self.assertEqual(base_pair_1.to_vector(), [2, 3, 1, 2, 0])
+        self.assertEqual(base_pair_1.to_vector(one_hot=True), [0, 0, 1, 0, 0, 0, 0, 1, 0])
+        self.assertEqual(base_pair_1.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [2, 3, 1, 2, 1])
+        self.assertEqual(base_pair_1.to_vector(pairing_type=PairingType.WATSON_CRICK), [2, 3, 1, 2, 0])
+
+        with self.assertRaises(ValueError):
+            base_pair_1.to_vector(pairing_type=PairingType.WOBBLE)
+
+        self.assertEqual(base_pair_2.to_vector(), [2, 2, 1, 2, 1])
+        self.assertEqual(base_pair_2.to_vector(one_hot=True), [1, 0, 0, 0, 0, 0, 0, 1, 1])
+        self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [2, 2, 1, 2, 1])
+        self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WATSON_CRICK), [2, 2, 1, 2, 1])
 
 
 if __name__ == '__main__':
