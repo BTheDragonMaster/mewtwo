@@ -45,6 +45,7 @@ class TestBasePair(unittest.TestCase):
     def test_to_vector(self):
         base_pair_1 = BasePair(Base.G, Base.U, False)
         base_pair_2 = BasePair(Base.A, Base.U, True)
+        base_pair_3 = BasePair(Base.ZERO_PADDING, Base.ZERO_PADDING, True)
 
         self.assertEqual(base_pair_1.to_vector(), [2, 3, 1, 2, 0])
         self.assertEqual(base_pair_1.to_vector(one_hot=True), [0, 0, 1, 0, 0, 0, 0, 1, 0])
@@ -58,6 +59,8 @@ class TestBasePair(unittest.TestCase):
         self.assertEqual(base_pair_2.to_vector(one_hot=True), [1, 0, 0, 0, 0, 0, 0, 1, 1])
         self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [2, 2, 1, 2, 1])
         self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WATSON_CRICK), [2, 2, 1, 2, 1])
+
+        self.assertEqual(base_pair_3.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [0, 0, 0, 0, 0])
 
 
 if __name__ == '__main__':
