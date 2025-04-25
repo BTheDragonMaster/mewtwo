@@ -83,11 +83,9 @@ class TestStem(unittest.TestCase):
                           1, 2, 2, 2, 1,
                           0, 0, 0, 0, 0])
 
-        with self.assertRaises(AssertionError):
-            upstream_bulge.to_vector(3, one_hot=True), [0, 0, 1, 0, 0, 1, 0, 0, 1,
-                                                        1, 0, 0, 0, 0, 0, 0, 1, 1,
-                                                        1, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                        0, 0, 0, 1, 1, 0, 0, 0, 1]
+        self.assertEqual(upstream_bulge.to_vector(3, one_hot=True), [0, 0, 1, 0, 0, 1, 0, 0, 1,
+                                                                     1, 0, 0, 0, 0, 0, 0, 1, 1,
+                                                                     1, 0, 0, 0, 0, 0, 0, 0, 0])
 
 
 if __name__ == '__main__':

@@ -43,7 +43,7 @@ class Stem:
                   pairing_type: PairingType = PairingType.STRUCTURE_BASED) -> list[int]:
         vector = []
         basepairs = self.get_basepairs()
-        assert max_stem_size >= len(basepairs)
+
         for i in range(max_stem_size):
             try:
                 basepair = basepairs[i]
