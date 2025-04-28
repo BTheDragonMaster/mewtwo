@@ -7,7 +7,7 @@ class ATract:
         self.sequence = sequence
 
     def to_vector(self, a_tract_size: int = 10, one_hot: bool = False) -> list[int]:
-        vector = []
+        vector: list[int] = []
         if len(self.sequence) < a_tract_size:
             for i in range(a_tract_size - len(self.sequence)):
                 vector.extend(base_to_vector(Base.ZERO_PADDING, one_hot))
