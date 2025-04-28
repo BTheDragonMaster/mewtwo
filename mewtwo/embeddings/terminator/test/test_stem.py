@@ -56,32 +56,39 @@ class TestStem(unittest.TestCase):
         upstream_bulge = Stem(RNASequence('GAAU'), '((.(', RNASequence('AUC'), ')))')
         gu_mismatch = Stem(RNASequence('GAGU'), '((.(', RNASequence('AUUC'), ').))')
 
-        self.assertEqual(simple_stem.to_vector(3), [2, 3, 1, 3, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 1])
-        self.assertEqual(simple_stem.to_vector(4), [2, 3, 1, 3, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 1, 0, 0, 0, 0, 0])
-        self.assertEqual(simple_stem.to_vector(3, one_hot=True), [0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1,
+        self.assertEqual(simple_stem.to_vector(3), [1, 0, 3, 0, 1, 3, 1,
+                                                    1, 0, 2, 0, 1, 2, 1,
+                                                    1, 0, 2, 0, 1, 2, 1])
+        self.assertEqual(simple_stem.to_vector(4), [1, 0, 3, 0, 1, 3, 1,
+                                                    1, 0, 2, 0, 1, 2, 1,
+                                                    1, 0, 2, 0, 1, 2, 1,
+                                                    0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(simple_stem.to_vector(3, one_hot=True), [0, 0, 1, 0, 0, 1, 0, 0, 1,
+                                                                  1, 0, 0, 0, 0, 0, 0, 1, 1,
                                                                   1, 0, 0, 0, 0, 0, 0, 1, 1])
+
         self.assertEqual(upstream_bulge.to_vector(4, one_hot=True), [0, 0, 1, 0, 0, 1, 0, 0, 1,
                                                                      1, 0, 0, 0, 0, 0, 0, 1, 1,
                                                                      1, 0, 0, 0, 0, 0, 0, 0, 0,
                                                                      0, 0, 0, 1, 1, 0, 0, 0, 1])
         self.assertEqual(gu_mismatch.to_vector(4, pairing_type=PairingType.WATSON_CRICK),
-                         [2, 3, 1, 3, 1,
-                          2, 2, 1, 2, 1,
-                          2, 3, 1, 2, 0,
-                          1, 2, 2, 2, 1])
+                         [1, 0, 3, 0, 1, 3, 1,
+                          1, 0, 2, 0, 1, 2, 1,
+                          1, 0, 3, 0, 1, 2, 0,
+                          0, 1, 2, 1, 0, 2, 1])
 
         self.assertEqual(gu_mismatch.to_vector(4, pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK),
-                         [2, 3, 1, 3, 1,
-                          2, 2, 1, 2, 1,
-                          2, 3, 1, 2, 1,
-                          1, 2, 2, 2, 1])
+                         [1, 0, 3, 0, 1, 3, 1,
+                          1, 0, 2, 0, 1, 2, 1,
+                          1, 0, 3, 0, 1, 2, 1,
+                          0, 1, 2, 1, 0, 2, 1])
 
         self.assertEqual(gu_mismatch.to_vector(5, pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK),
-                         [2, 3, 1, 3, 1,
-                          2, 2, 1, 2, 1,
-                          2, 3, 1, 2, 1,
-                          1, 2, 2, 2, 1,
-                          0, 0, 0, 0, 0])
+                         [1, 0, 3, 0, 1, 3, 1,
+                          1, 0, 2, 0, 1, 2, 1,
+                          1, 0, 3, 0, 1, 2, 1,
+                          0, 1, 2, 1, 0, 2, 1,
+                          0, 0, 0, 0, 0, 0, 0])
 
         self.assertEqual(upstream_bulge.to_vector(3, one_hot=True), [0, 0, 1, 0, 0, 1, 0, 0, 1,
                                                                      1, 0, 0, 0, 0, 0, 0, 1, 1,

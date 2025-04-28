@@ -1,6 +1,6 @@
 from enum import Flag
 from typing import Union
-from mewtwo.embeddings.bases import Base
+from mewtwo.embeddings.bases import Base, base_to_vector
 
 
 class SeqType(Flag):
@@ -51,6 +51,14 @@ class Sequence:
                         raise ValueError(f"RNA sequence must be comprised of bases A, C, G and U. Found {character} in {self.sequence}")
                 except KeyError:
                     raise ValueError(f"RNA sequence must be comprised of bases A, C, G, and U. Found {character} in {self.sequence}")
+
+    def to_vector(self, one_hot: bool = False) -> list[int]:
+        vector = []
+        for character in self.sequence:
+            base = Base[character]
+            vector.extend(base_to_vector(base, one_hot=one_hot))
+
+        return vector
 
 
 class DNASequence(Sequence):

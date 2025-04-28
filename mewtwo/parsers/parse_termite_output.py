@@ -1,6 +1,6 @@
 from mewtwo.parsers.tabular import Tabular
 from mewtwo.embeddings.terminator.hairpin import RNAFoldHairpin, TransTermHPHairpin
-from mewtwo.embeddings.bases import BasePair
+from mewtwo.embeddings.bases import BasePair, Base
 
 from sys import argv
 from pprint import pprint
@@ -79,7 +79,7 @@ if __name__ == "__main__":
                     if basepair not in basepairs_to_counts_transtermhp:
                         basepairs_to_counts_transtermhp[basepair] = 0
                     basepairs_to_counts_transtermhp[basepair] += 1
-                    if basepair == BasePair('A', 'A', True):
+                    if basepair == BasePair(Base.A, Base.A, True):
                         print(hairpin.hairpin_sequence)
                         print(hairpin.hairpin_structure)
 
