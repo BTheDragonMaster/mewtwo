@@ -13,6 +13,8 @@ class Sequence:
         self.sequence = sequence.upper()
         self.seq_type = seq_type
         self._check_sequence()
+        self.seq_length = len(sequence)
+        self.__current_index = 0
 
     def __eq__(self, other):
         if self.sequence == other.sequence and type(self) == type(other):
@@ -25,6 +27,17 @@ class Sequence:
 
     def __repr__(self):
         return self.sequence
+
+    def __iter__(self):
+        return type(self)(self.sequence)
+
+    def __next__(self) -> Base:
+        if self.__current_index < self.seq_length:
+            base = Base[self.sequence[self.__current_index]]
+            self.__current_index += 1
+            return base
+        else:
+            raise StopIteration
 
     def __getitem__(self, index: Union[slice, int]) -> Union['Sequence', 'RNASequence', 'DNASequence', Base]:
         if isinstance(index, int):
