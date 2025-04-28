@@ -1,13 +1,19 @@
+from enum import Enum
+
 from mewtwo.embeddings.terminator.loop import Loop
 from mewtwo.embeddings.terminator.stem import Stem
 from mewtwo.embeddings.bases import BasePair, Base
 from mewtwo.embeddings.sequence import DNASequence, RNASequence, get_sequence_type, convert_to_rna, SeqType
 
 
+class HairpinType(Enum):
+    RNAFOLD = 1
+    TRANSTERMHP = 2
+
+
 class Hairpin:
     def __init__(self, hairpin_id: str, distance_to_pot: int,
-                 prediction_software: str):
-        assert prediction_software in ["RNAFold", "TransTermHP"]
+                 prediction_software: HairpinType):
 
         self.hairpin_id = hairpin_id
         self.distance_to_pot = distance_to_pot
@@ -67,7 +73,7 @@ class Hairpin:
 class RNAFoldHairpin(Hairpin):
 
     def __init__(self, hairpin_id, distance_to_pot, free_energy, hairpin_sequence, hairpin_structure):
-        super().__init__(hairpin_id, distance_to_pot, "RNAFold")
+        super().__init__(hairpin_id, distance_to_pot, HairpinType.RNAFOLD)
         seq_type = get_sequence_type(hairpin_sequence)
         if SeqType.RNA in seq_type:
             sequence = RNASequence(hairpin_sequence)
@@ -83,7 +89,7 @@ class RNAFoldHairpin(Hairpin):
 class TransTermHPHairpin(Hairpin):
 
     def __init__(self, hairpin_id, distance_to_pot, hairpin_score, hairpin):
-        super().__init__(hairpin_id, distance_to_pot, "TransTermHP")
+        super().__init__(hairpin_id, distance_to_pot, HairpinType.TRANSTERMHP)
         self.set_hairpin_sequence(hairpin)
         self.set_hairpin_structure(hairpin)
         self.hairpin_score = hairpin_score
