@@ -42,25 +42,29 @@ def base_to_vector(base: Base, one_hot: bool = False) -> list[int]:
             return BASE_TO_ONEHOT[base][:]
 
     else:
-        if base in Base.PYRIMIDINES:
+        if base in Base.PURINES:
             element_1 = 1
-        elif base in Base.PURINES:
-            element_1 = 2
+            element_2 = 0
+        elif base in Base.PYRIMIDINES:
+            element_1 = 0
+            element_2 = 1
+
         elif base == Base.ZERO_PADDING:
             element_1 = 0
-        else:
-            raise ValueError(f"Unknown base: {base}")
-
-        if base in Base.TWO_H_BONDS:
-            element_2 = 2
-        elif base in Base.THREE_H_BONDS:
-            element_2 = 3
-        elif base == Base.ZERO_PADDING:
             element_2 = 0
         else:
             raise ValueError(f"Unknown base: {base}")
 
-        return [element_1, element_2]
+        if base in Base.TWO_H_BONDS:
+            element_3 = 2
+        elif base in Base.THREE_H_BONDS:
+            element_3 = 3
+        elif base == Base.ZERO_PADDING:
+            element_3 = 0
+        else:
+            raise ValueError(f"Unknown base: {base}")
+
+        return [element_1, element_2, element_3]
 
 
 WATSON_CRICK_PAIRS = [Base.A | Base.T,
@@ -138,6 +142,7 @@ class BasePair:
                 vector.append(1)
             else:
                 vector.append(0)
+
         elif pairing_type == PairingType.WATSON_CRICK:
             if self.is_watson_crick():
                 vector.append(1)

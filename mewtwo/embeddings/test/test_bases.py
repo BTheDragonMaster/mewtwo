@@ -5,12 +5,12 @@ from mewtwo.embeddings.bases import Base, base_to_vector, BasePair, PairingType
 
 class TestBase(unittest.TestCase):
     def test_to_vector(self):
-        self.assertEqual(base_to_vector(Base.A), [2, 2])
-        self.assertEqual(base_to_vector(Base.U), [1, 2])
-        self.assertEqual(base_to_vector(Base.G), [2, 3])
-        self.assertEqual(base_to_vector(Base.C), [1, 3])
-        self.assertEqual(base_to_vector(Base.T), [1, 2])
-        self.assertEqual(base_to_vector(Base.ZERO_PADDING), [0, 0])
+        self.assertEqual(base_to_vector(Base.A), [1, 0, 2])
+        self.assertEqual(base_to_vector(Base.U), [0, 1, 2])
+        self.assertEqual(base_to_vector(Base.G), [1, 0, 3])
+        self.assertEqual(base_to_vector(Base.C), [0, 1, 3])
+        self.assertEqual(base_to_vector(Base.T), [0, 1, 2])
+        self.assertEqual(base_to_vector(Base.ZERO_PADDING), [0, 0, 0])
 
         self.assertEqual(base_to_vector(Base.A, one_hot=True), [1, 0, 0, 0])
         self.assertEqual(base_to_vector(Base.U, one_hot=True), [0, 0, 0, 1])
@@ -19,7 +19,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(base_to_vector(Base.T, one_hot=True), [0, 0, 0, 1])
         self.assertEqual(base_to_vector(Base.ZERO_PADDING, one_hot=True), [0, 0, 0, 0])
 
-        self.assertNotEqual(base_to_vector(Base.A, one_hot=True), [2, 2])
+        self.assertNotEqual(base_to_vector(Base.A, one_hot=True), [1, 0, 2])
 
         with self.assertRaises(ValueError):
             base_to_vector(Base.DNA)
@@ -47,20 +47,20 @@ class TestBasePair(unittest.TestCase):
         base_pair_2 = BasePair(Base.A, Base.U, True)
         base_pair_3 = BasePair(Base.ZERO_PADDING, Base.ZERO_PADDING, True)
 
-        self.assertEqual(base_pair_1.to_vector(), [2, 3, 1, 2, 0])
+        self.assertEqual(base_pair_1.to_vector(), [1, 0, 3, 0, 1, 2, 0])
         self.assertEqual(base_pair_1.to_vector(one_hot=True), [0, 0, 1, 0, 0, 0, 0, 1, 0])
-        self.assertEqual(base_pair_1.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [2, 3, 1, 2, 1])
-        self.assertEqual(base_pair_1.to_vector(pairing_type=PairingType.WATSON_CRICK), [2, 3, 1, 2, 0])
+        self.assertEqual(base_pair_1.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [1, 0, 3, 0, 1, 2, 1])
+        self.assertEqual(base_pair_1.to_vector(pairing_type=PairingType.WATSON_CRICK), [1, 0, 3, 0, 1, 2, 0])
 
         with self.assertRaises(ValueError):
             base_pair_1.to_vector(pairing_type=PairingType.WOBBLE)
 
-        self.assertEqual(base_pair_2.to_vector(), [2, 2, 1, 2, 1])
+        self.assertEqual(base_pair_2.to_vector(), [1, 0, 2, 0, 1, 2, 1])
         self.assertEqual(base_pair_2.to_vector(one_hot=True), [1, 0, 0, 0, 0, 0, 0, 1, 1])
-        self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [2, 2, 1, 2, 1])
-        self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WATSON_CRICK), [2, 2, 1, 2, 1])
+        self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [1, 0, 2, 0, 1, 2, 1])
+        self.assertEqual(base_pair_2.to_vector(pairing_type=PairingType.WATSON_CRICK), [1, 0, 2, 0, 1, 2, 1])
 
-        self.assertEqual(base_pair_3.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [0, 0, 0, 0, 0])
+        self.assertEqual(base_pair_3.to_vector(pairing_type=PairingType.WOBBLE_OR_WATSON_CRICK), [0, 0, 0, 0, 0, 0, 0])
 
 
 if __name__ == '__main__':
