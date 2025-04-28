@@ -29,6 +29,9 @@ class TestLoop(unittest.TestCase):
         with self.assertRaises(AssertionError):
             loop_02.to_vector(max_loop_size=5)
 
+        with self.assertRaises(AssertionError):
+            loop_02.to_vector(max_loop_size=6)
+
         self.assertEqual(loop_02.to_vector(max_loop_size=7), [1, 0, 2,
                                                               1, 0, 3,
                                                               0, 1, 3,

@@ -9,6 +9,8 @@ class Loop:
 
     def to_vector(self, max_loop_size, one_hot=False):
         assert len(self.sequence) <= max_loop_size
+        assert max_loop_size % 2 == 1
+
         if len(self.sequence) % 2 == 0:
             center_base = Base.ZERO_PADDING
         else:
