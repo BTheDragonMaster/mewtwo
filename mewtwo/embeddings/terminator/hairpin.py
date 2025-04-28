@@ -15,6 +15,8 @@ class Hairpin:
         self.prediction_software = prediction_software
         self.hairpin_sequence = None
         self.hairpin_structure = None
+        self.loop = None
+        self.stem = None
 
     def __eq__(self, other):
         if type(self) != other(type):
@@ -36,7 +38,7 @@ class Hairpin:
 
         return False
 
-    def get_hairpin_parts(self):
+    def set_hairpin_parts(self):
         assert not self.contains_multiple_hairpins()
 
         last_left_shoulder = 0
@@ -55,10 +57,8 @@ class Hairpin:
         right_shoulder_structure = self.hairpin_structure[first_right_shoulder:]
         right_shoulder_sequence = self.hairpin_sequence[first_right_shoulder:]
 
-        loop = Loop(loop_sequence, loop_structure)
-        stem = Stem(left_shoulder_sequence, left_shoulder_structure, right_shoulder_sequence, right_shoulder_structure)
-
-        return loop, stem
+        self.loop = Loop(loop_sequence, loop_structure)
+        self.stem = Stem(left_shoulder_sequence, left_shoulder_structure, right_shoulder_sequence, right_shoulder_structure)
 
     def to_vector(self, max_stem_size, max_loop_size):
         assert self.hairpin_sequence is not None and self.hairpin_structure is not None
@@ -76,6 +76,8 @@ class RNAFoldHairpin(Hairpin):
         self.hairpin_sequence = sequence
         self.hairpin_structure = hairpin_structure
         self.free_energy = free_energy
+        if not self.contains_multiple_hairpins():
+            self.set_hairpin_parts()
 
 
 class TransTermHPHairpin(Hairpin):
@@ -85,6 +87,8 @@ class TransTermHPHairpin(Hairpin):
         self.set_hairpin_sequence(hairpin)
         self.set_hairpin_structure(hairpin)
         self.hairpin_score = hairpin_score
+        if not self.contains_multiple_hairpins():
+            self.set_hairpin_parts()
 
     def set_hairpin_sequence(self, hairpin):
 
