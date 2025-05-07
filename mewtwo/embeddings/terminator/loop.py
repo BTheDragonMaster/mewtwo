@@ -33,22 +33,20 @@ class Loop:
                 right_vector.extend(base_to_vector(base, one_hot=one_hot))
 
         vector = left_padding + left_vector + center_vector + right_vector + right_padding
-        print(left_padding)
-        print(left_vector)
-        print(center_vector)
-        print(right_vector)
-        print(right_padding)
         return vector
 
 
 def get_max_loop_size(loops: list[Loop]) -> int:
     max_loop_size = 0
     for loop in loops:
-        stem_size = len(loop.sequence)
-        if stem_size > max_loop_size:
-            max_loop_size += 1
+        loop_size = len(loop.sequence)
+        if loop_size > max_loop_size:
+
+            max_loop_size = loop_size
+
 
     if max_loop_size % 2 == 0:
+
         max_loop_size += 1
 
     return max_loop_size
