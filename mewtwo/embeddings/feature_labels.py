@@ -2,6 +2,31 @@ from typing import Optional
 
 from mewtwo.embeddings.sequence import SeqType
 from mewtwo.embeddings.bases import Base
+from enum import Enum
+
+class FeatureType(Enum):
+    IS_A = 1
+    IS_C = 2
+    IS_G = 3
+    IS_U = 4
+    IS_PURINE = 5
+    IS_PYRIMIDINE = 6
+    NR_H_BONDS = 7
+    IS_BONDED = 8
+    IS_POT = 9
+
+    @staticmethod
+    def from_base(base: Base) -> "FeatureType":
+        base_to_feature_type = {Base.A: FeatureType.IS_A,
+                                Base.C: FeatureType.IS_C,
+                                Base.G: FeatureType.IS_G,
+                                Base.U: FeatureType.IS_U,
+                                Base.PURINES: FeatureType.IS_PURINE,
+                                Base.PYRIMIDINES: FeatureType.IS_PYRIMIDINE}
+
+        assert base in base_to_feature_type
+
+        return base_to_feature_type[base]
 
 
 class FeatureLabel:
@@ -13,6 +38,8 @@ class FeatureLabel:
 
         self.seq_type = seq_type
         self.one_hot = one_hot
+
+        self.feature_type: Optional[FeatureType] = None
 
         self.base_index: Optional[int] = None
         self.base_identity: Optional[Base] = None
@@ -41,24 +68,27 @@ class FeatureLabel:
             nr_u_tract_features = 4 * max_u_tract_length
 
         if feature_position < nr_a_tract_features:
-            self.feature_type = "A-tract"
+            self.feature_category = "A-tract"
             self.relative_feature_position = feature_position
             self.set_base_information()
         elif feature_position < nr_a_tract_features + nr_stem_features:
-            self.feature_type = "stem"
+            self.feature_category = "stem"
             self.relative_feature_position = feature_position - nr_a_tract_features
             self.set_basepair_information()
         elif feature_position < nr_a_tract_features + nr_stem_features + nr_loop_features:
-            self.feature_type = "loop"
+            self.feature_category = "loop"
             self.relative_feature_position = feature_position - nr_a_tract_features - nr_stem_features
             self.set_base_information()
         elif feature_position < nr_a_tract_features + nr_stem_features + nr_loop_features + nr_u_tract_features:
-            self.feature_type = "U-tract"
+            self.feature_category = "U-tract"
             self.relative_feature_position = \
                 feature_position - nr_a_tract_features - nr_stem_features - nr_loop_features
             self.set_base_information()
         else:
             raise IndexError(f"Feature position {feature_position} does not exist.")
+
+    def __str__(self):
+        pass
 
     def set_base_information(self) -> None:
 
@@ -73,7 +103,7 @@ class FeatureLabel:
         else:
             features = [Base.PURINES, Base.PYRIMIDINES, "hydrogen bonds"]
 
-        if self.feature_type == 'U-tract':
+        if self.feature_category == 'U-tract':
             features.append('POT')
 
         feature_nr = len(features)
@@ -83,10 +113,13 @@ class FeatureLabel:
                 feature = features[i]
                 if feature == 'POT':
                     self.check_pot = True
+                    self.feature_type = FeatureType.IS_POT
                 elif feature == 'hydrogen bonds':
                     self.base_hydrogen_bond_count = True
+                    self.feature_type = FeatureType.NR_H_BONDS
                 else:
                     self.base_identity = feature
+                    self.feature_type = FeatureType.from_base(feature)
 
                 self.base_index = self.relative_feature_position // feature_nr + 1
                 break
@@ -95,7 +128,7 @@ class FeatureLabel:
             raise ValueError(f"Could not find feature type for feature at {self.relative_feature_position}")
 
     def set_basepair_information(self) -> None:
-        assert self.feature_type == "stem"
+        assert self.feature_category == "stem"
         if self.one_hot:
             feature_nr = 9
             if self.seq_type == SeqType.RNA:
@@ -124,11 +157,14 @@ class FeatureLabel:
 
                     if feature != 'hydrogen bonds':
                         self.base_identity = feature
+                        self.feature_type = FeatureType.from_base(feature)
                     else:
                         self.base_hydrogen_bond_count = True
+                        self.feature_type = FeatureType.NR_H_BONDS
 
                 else:
                     self.check_pairing = True
+                    self.feature_type = FeatureType.IS_BONDED
                 break
         else:
 

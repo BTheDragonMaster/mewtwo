@@ -29,7 +29,7 @@ class TestFeatureLabel(unittest.TestCase):
         self.assertEqual(feature_a01.base_index, 1)
         self.assertEqual(feature_a01.base_pair_index, None)
         self.assertEqual(feature_a01.base_hydrogen_bond_count, False)
-        self.assertEqual(feature_a01.feature_type, 'A-tract')
+        self.assertEqual(feature_a01.feature_category, 'A-tract')
 
         self.assertEqual(feature_a02.base_identity, Base.PYRIMIDINES)
         self.assertEqual(feature_a02.base_index, 1)
@@ -98,7 +98,7 @@ class TestFeatureLabel(unittest.TestCase):
         self.assertEqual(feature_s01.base_pair_index, 1)
         self.assertEqual(feature_s01.stem_shoulder, 'upstream')
         self.assertEqual(feature_s01.base_hydrogen_bond_count, False)
-        self.assertEqual(feature_s01.feature_type, 'stem')
+        self.assertEqual(feature_s01.feature_category, 'stem')
 
         self.assertEqual(feature_s02.base_identity, Base.PYRIMIDINES)
         self.assertEqual(feature_s03.base_identity, None)
