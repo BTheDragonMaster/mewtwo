@@ -1,10 +1,10 @@
 from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
 from mewtwo.embeddings.terminator.terminator import get_terminator_part_sizes, Terminator
 from mewtwo.parsers.parse_dnabert_data import parse_dnabert_data
+from mewtwo.machine_learning.data_preparation.binning import bin_data
 
 import os
 from sys import argv
-from math import isclose
 
 
 class CrossvalidationFold:
@@ -52,38 +52,9 @@ def split_data(terminators, test_size: float = 0.5, n_crossval_sets: int = 5):
 
     return train_terminators, test_terminators, crossvalidation_sets
 
-def bin_data(y, n_bins: int = 10):
-    bin_ranges = []
-    range_start = 0.0
-    step = 1.0 / n_bins
-    bins = []
-
-    for i in range(n_bins):
-        range_end = range_start + step
-        bin_ranges.append((range_start, range_end))
-        range_start = range_end
-
-    for i, y_data in enumerate(y):
-        bin_index = 0
-        bin_range = bin_ranges[bin_index]
-
-        if y_data < 0.0 and not isclose(y_data, 0.0):
-            raise ValueError(f"Expected value between 0.0 and 1.0. Got {y_data}")
-
-        while bin_range[1] <= y_data and not isclose(y_data, bin_range[1]):
-            bin_index += 1
-            try:
-                bin_range = bin_ranges[bin_index]
-            except IndexError:
-                raise ValueError(f"Expected value between 0.0 and 1.0. Got {y_data}")
-
-
-        bins.append(bin_index)
-
-    return bins
 
 def split_data_from_file(input_file: str, output_dir: str, test_size: float = 0.25, validation_size: float = 0.33333,
-                         nr_stratification_bins: int = 10):
+                         nr_stratification_bins: int = 5):
     """
 
     Parameters
@@ -159,7 +130,7 @@ def split_data_from_file(input_file: str, output_dir: str, test_size: float = 0.
         with open(out_file, 'w') as out:
             for j, seq in enumerate(out_x[i]):
                 te = out_y[i][j]
-                out.write(f"{seq}\t{te}\n")
+                out.write(f"{seq}\t{te * 100}\n")
 
 
 if __name__ == "__main__":
