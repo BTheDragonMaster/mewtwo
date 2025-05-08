@@ -17,9 +17,6 @@ class TestTrainTestSplit(unittest.TestCase):
         test_data_1 = os.path.abspath(os.path.join(BASE_DIR, 'data', 'mock_data_1.txt'))
         test_output_1 = os.path.abspath(os.path.join(BASE_DIR, 'output', 'mock_output_1'))
 
-        # test_data_2 = os.path.abspath(os.path.join(BASE_DIR, 'data', 'mock_data_2.txt'))
-        # test_output_2 = os.path.abspath(os.path.join(BASE_DIR, 'output', 'mock_output_2'))
-
         split_data_from_file(test_data_1, test_output_1)
 
         self.assertEqual(os.path.exists(test_output_1), True)

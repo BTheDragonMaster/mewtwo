@@ -1,25 +1,21 @@
 from mewtwo.parsers.tabular import Tabular
 from mewtwo.embeddings.terminator.hairpin import RNAFoldHairpin, TransTermHPHairpin
-from mewtwo.embeddings.bases import BasePair, Base
-from mewtwo.embeddings.terminator.terminator import Terminator, get_terminator_part_sizes
+from mewtwo.embeddings.terminator.terminator import Terminator
 from mewtwo.embeddings.sequence import DNASequence, convert_to_rna, convert_to_dna
 from mewtwo.embeddings.terminator.a_tract import ATract
 from mewtwo.embeddings.terminator.u_tract import UTract
 from mewtwo.machine_learning.random_forest.train_random_forest import train_random_forest
-from mewtwo.machine_learning.train_test_split import split_data
-from mewtwo.machine_learning.prepare_data import terminators_to_ml_input
-from mewtwo.machine_learning.neural_network import train_nn
+from mewtwo.machine_learning.data_preparation.train_test_split import split_data
 
 from sys import argv
 import os
-from pprint import pprint
-from statistics import median
+
 
 def termite_to_dnabert_input(input_file: str, output_dir: str, species_column: bool = True) -> None:
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    terminators = get_termite_terminators(input_file, species_column=True, te_only=True)
+    terminators = get_termite_terminators(input_file, species_column=species_column, te_only=True)
     spec_to_term = sort_by_species(terminators)
 
     bacillus_terminators = []
@@ -39,11 +35,11 @@ def termite_to_dnabert_input(input_file: str, output_dir: str, species_column: b
         with open(ecoli_out_file, 'w') as ecoli_out:
             with open(bacillus_out_file, 'w') as bacillus_out:
                 for terminator in ecoli_terminators:
-                    terminator_data = f"{convert_to_dna(terminator.sequence).sequence}\t{terminator.te}\n"
+                    terminator_data = f"{convert_to_dna(terminator.sequence).sequence}\t{terminator.te / 100}\n"
                     all_out.write(terminator_data)
                     ecoli_out.write(terminator_data)
                 for terminator in bacillus_terminators:
-                    terminator_data = f"{convert_to_dna(terminator.sequence).sequence}\t{terminator.te}\n"
+                    terminator_data = f"{convert_to_dna(terminator.sequence).sequence}\t{terminator.te / 100}\n"
                     all_out.write(terminator_data)
                     bacillus_out.write(terminator_data)
 

@@ -130,7 +130,7 @@ def split_data_from_file(input_file: str, output_dir: str, test_size: float = 0.
         with open(out_file, 'w') as out:
             for j, seq in enumerate(out_x[i]):
                 te = out_y[i][j]
-                out.write(f"{seq}\t{te * 100}\n")
+                out.write(f"{seq}\t{te}\n")
 
 
 if __name__ == "__main__":
