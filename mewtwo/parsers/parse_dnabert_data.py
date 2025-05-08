@@ -1,3 +1,4 @@
+
 def parse_dnabert_data(input_file: str) -> tuple[list[str], list[float]]:
     seqs = []
     tes = []
@@ -7,5 +8,5 @@ def parse_dnabert_data(input_file: str) -> tuple[list[str], list[float]]:
             seq, te = line.split('\t')
             te = float(te)
             seqs.append(seq)
-            tes.append(te / 100)
+            tes.append(te)
     return seqs, tes
