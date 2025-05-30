@@ -4,6 +4,7 @@ from mewtwo.embeddings.sequence import SeqType
 from mewtwo.embeddings.bases import Base
 from enum import Enum
 
+
 class FeatureType(Enum):
     IS_A = 1
     IS_C = 2

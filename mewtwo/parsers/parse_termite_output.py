@@ -6,6 +6,7 @@ from mewtwo.embeddings.terminator.a_tract import ATract
 from mewtwo.embeddings.terminator.u_tract import UTract
 from mewtwo.machine_learning.random_forest.train_random_forest import train_random_forest
 from mewtwo.machine_learning.data_preparation.train_test_split import split_data
+from mewtwo.machine_learning.feature_inference.infer_features_rf import write_average_importances
 
 from sys import argv
 import os
@@ -42,7 +43,6 @@ def termite_to_dnabert_input(input_file: str, output_dir: str, species_column: b
                     terminator_data = f"{convert_to_dna(terminator.sequence).sequence}\t{terminator.te / 100}\n"
                     all_out.write(terminator_data)
                     bacillus_out.write(terminator_data)
-
 
 
 def parse_termite_data(input_file: str, species_column: bool) -> Tabular:
@@ -221,7 +221,6 @@ if __name__ == "__main__":
     bacillus_terminators = []
     ecoli_terminators = []
 
-
     for species, species_terminators in species_to_terminators.items():
         if 'Bacillus' in species and '(d)' in species:
             bacillus_terminators.extend(species_terminators)
@@ -232,8 +231,10 @@ if __name__ == "__main__":
     train_terminators, test_terminators, crossvalidation_sets = split_data(all_terminators, test_size=0.1)
 
     for crossval_nr, crossvalidation_set in crossvalidation_sets.items():
-        train_random_forest(crossvalidation_set.train, crossvalidation_set.test, one_hot=True)
+        out_dir = os.path.join(argv[2], f"crossvalidation_results_{crossval_nr}")
+        rf = train_random_forest(crossvalidation_set.train, crossvalidation_set.test, one_hot=True, out_dir=out_dir)
 
+    write_average_importances(argv[2], os.path.join(argv[2], "average_feature_importances.txt"))
     # train_terminators, test_terminators, _ = split_data(ecoli_terminators, test_size=0.1)
     #
     # train_random_forest(train_terminators, test_terminators, one_hot=True)
@@ -244,7 +245,7 @@ if __name__ == "__main__":
 
     print(min([t.te for t in all_terminators]), max([t.te for t in all_terminators]))
 
-    termite_to_dnabert_input(argv[1], argv[2], species_column=True)
+    # termite_to_dnabert_input(argv[1], argv[2], species_column=True)
 
     # train_nn(train_terminators, test_terminators)
 

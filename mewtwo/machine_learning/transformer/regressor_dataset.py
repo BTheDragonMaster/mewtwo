@@ -4,9 +4,10 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class RegressionDataset(Dataset):
-    def __init__(self, sequences, labels, tokenizer, max_length=512):
+    def __init__(self, sequences, labels, weights, tokenizer, max_length=512):
         self.sequences = sequences
         self.labels = labels
+        self.weights = weights
         self.tokenizer = tokenizer
         self.max_length = max_length
 
@@ -16,6 +17,7 @@ class RegressionDataset(Dataset):
     def __getitem__(self, idx):
         sequence = self.sequences[idx]
         label = self.labels[idx]
+        weight = self.weights[idx]
 
         # Tokenize the sequence
         encoding = self.tokenizer(sequence, truncation=True, padding="max_length", max_length=self.max_length,
@@ -26,11 +28,8 @@ class RegressionDataset(Dataset):
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
-            'labels': torch.tensor(label, dtype=torch.float)  # For regression, labels are continuous values
+            'labels': torch.tensor(label, dtype=torch.float),
+            'weights': torch.tensor(weight, dtype=torch.float)
         }
 
-
-# Example sequences and labels
-sequences = ["ACGTACGT", "AGCTAGCT", "CGTACGTA"]
-labels = [0.5, 1.2, 0.8]  # Continuous labels for regression
 

@@ -2,7 +2,7 @@ from math import isclose
 
 
 
-def bin_data(y, n_bins: int = 10):
+def bin_data(y, n_bins: int = 5):
     bin_ranges = []
     range_start = 0.0
     step = 1.0 / n_bins
