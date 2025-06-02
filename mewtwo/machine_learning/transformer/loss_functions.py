@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from mewtwo.machine_learning.transformer.config.config_types import LossFunctionType
+from mewtwo.parsers.parse_model_config import LossFunctionConfig
 
 
 def weighted_mse_loss(preds, targets, weights):
@@ -115,12 +116,11 @@ TYPE_TO_LOSS_FN = {LossFunctionType.MSE: nn.MSELoss,
                    LossFunctionType.SPEARMAN: CombinedMSESpearmanLoss}
 
 
-def get_loss_function(string_description: str, alpha: float = 0.5):
-    loss_fn_type = LossFunctionType.from_string_description(string_description)
-    loss_fn = TYPE_TO_LOSS_FN[loss_fn_type]
-    if loss_fn_type in LossFunctionType.NEEDS_ALPHA:
-        loss_fn_instance = loss_fn(alpha=alpha)
-    elif loss_fn.type in LossFunctionType.CORRELATION_ONLY:
+def get_loss_function(config: LossFunctionConfig):
+    loss_fn = TYPE_TO_LOSS_FN[config.type]
+    if config.type in LossFunctionType.NEEDS_ALPHA:
+        loss_fn_instance = loss_fn(alpha=config.alpha)
+    elif config.type in LossFunctionType.CORRELATION_ONLY:
         loss_fn_instance = loss_fn(alpha=0.0)
     else:
         loss_fn_instance = loss_fn()

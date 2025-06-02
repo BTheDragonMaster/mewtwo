@@ -19,13 +19,13 @@ def get_hyperoptimization_configs():
 
     batch_sizes = [4, 8]
     learning_rates = [1e-5, 5e-5, 1e-4, 5e-4]
-    hidden_layer_dropouts = [0.1]
+    hidden_layer_dropouts = [0.1, 0.2]
 
     for batch_size in batch_sizes:
         for finetuning_type in FinetuningType:
             if finetuning_type.name == "ADAPTER":
                 lora_rank_options = [4]
-                lora_dropout_options = [0.1]
+                lora_dropout_options = [0.05]
             else:
                 lora_rank_options = [None]
                 lora_dropout_options = [None]
@@ -89,7 +89,7 @@ def main():
 
     model_configs = get_hyperoptimization_configs()
     for i, model_config in enumerate(model_configs):
-        out_file = os.path.join(args.o, f"config_{i + 1:03}")
+        out_file = os.path.join(args.o, f"model_{i + 1:03}.config")
         model_config.write_model_config(out_file)
 
 

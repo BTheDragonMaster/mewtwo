@@ -107,8 +107,8 @@ class SchedulerConfig:
     @classmethod
     def from_file(cls, input_file) -> Union["SchedulerConfig", None]:
         scheduler_type = None
-        training_steps = None
-        warmup_steps = None
+        training_epochs = None
+        warmup_epochs = None
 
         with open(input_file, 'r') as model_config:
             for line in model_config:
@@ -116,15 +116,15 @@ class SchedulerConfig:
                 field, value = line.split('\t')
                 if field == "scheduler":
                     scheduler_type = SchedulerType[value]
-                if field == "scheduler_training_steps":
-                    training_steps = int(value)
-                if field == "scheduler_warmup_steps":
-                    warmup_steps = int(value)
+                if field == "scheduler_training_epochs":
+                    training_epochs = int(value)
+                if field == "scheduler_warmup_epochs":
+                    warmup_epochs = int(value)
 
         if scheduler_type is None:
             return None
         else:
-            return SchedulerConfig(scheduler_type, training_steps, warmup_steps)
+            return SchedulerConfig(scheduler_type, training_epochs, warmup_epochs)
 
 
 @dataclass
@@ -151,6 +151,7 @@ class ModelConfig:
             return False
 
     def write_model_config(self, out_file):
+        assert out_file.endswith('.config')
 
         with open(out_file, 'w') as out:
             out.write(f"finetuning_mode\t{self.finetuning_mode.name}\n")
@@ -171,9 +172,9 @@ class ModelConfig:
             if self.scheduler_config is not None:
                 out.write(f"scheduler\t{self.scheduler_config.type.name}\n")
                 if self.scheduler_config.training_epochs is not None:
-                    out.write(f"scheduler_training_steps\t{self.scheduler_config.training_epochs}\n")
+                    out.write(f"scheduler_training_epochs\t{self.scheduler_config.training_epochs}\n")
                 if self.scheduler_config.warmup_epochs is not None:
-                    out.write(f"scheduler_warmup_steps\t{self.scheduler_config.warmup_epochs}\n")
+                    out.write(f"scheduler_warmup_epochs\t{self.scheduler_config.warmup_epochs}\n")
 
     @classmethod
     def from_file(cls, input_file):

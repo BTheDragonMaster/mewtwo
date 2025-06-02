@@ -3,12 +3,10 @@ from peft import get_peft_model, LoraConfig, TaskType
 
 
 class DNABERTRegressor(nn.Module):
-    def __init__(self, base_model, dropout: float = 0.2,
-                 tuning_mode: str = 'linear_head', use_adapters=False, lora_alpha: int = 16, lora_r: int = 8,
+    def __init__(self, base_model, dropout: float = 0.2, use_adapters=False, lora_alpha: int = 16, lora_r: int = 8,
                  lora_dropout: float = 0.1):
         super().__init__()
         self.base = base_model
-        self.current_epoch = 0
 
         if use_adapters:
             peft_config = LoraConfig(task_type=TaskType.SEQ_CLS,
@@ -21,13 +19,8 @@ class DNABERTRegressor(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-        if tuning_mode == 'linear_head':
-
-            self.regressor = nn.Sequential(self.dropout, nn.Linear(self.base.base_model.config.hidden_size, 1),
-                                           nn.Sigmoid())
-
-    def update_epoch(self, epoch):
-        self.current_epoch = epoch
+        self.regressor = nn.Sequential(self.dropout, nn.Linear(self.base.base_model.config.hidden_size, 1),
+                                       nn.Sigmoid())
 
     def forward(self, input_ids, attention_mask=None):
         # Pass through the model
