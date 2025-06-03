@@ -4,6 +4,8 @@ import os
 from mewtwo.machine_learning.transformer.model import load_model
 from mewtwo.machine_learning.transformer.config.config_types import SchedulerType
 
+from scipy.stats import pearsonr, spearmanr
+
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -32,7 +34,9 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
-def finetune(model, summary, epochs, out_dir):
+def finetune(model, summary, epochs, out_dir, header=False):
+    if header:
+        summary.write("epoch\taverage_train_loss\taverage_eval_loss\tpearsonr\tspearmanr\n")
     config_file = os.path.join(out_dir, "model.config")
 
     current_epoch = model.config.epochs
@@ -46,16 +50,22 @@ def finetune(model, summary, epochs, out_dir):
         avg_train_loss = model.train_model()
         avg_loss, all_preds, all_labels = model.evaluate_model()
 
+        pearson = pearsonr(all_labels, all_preds)
+        spearman = spearmanr(all_labels, all_preds)
+
         print(f"Epoch {current_epoch}\t- Train loss:\t{avg_train_loss:.4f}")
         print(f" \t- Eval loss:\t{avg_loss:.4f}")
 
-        summary.write(f"{current_epoch}\t{avg_train_loss:.5f}\t{avg_loss:.5f}\n")
+        print(f" \t- PearsonR:\t{pearson:.4f}")
+        print(f" \t- SpearmanR:\t{spearman:.4f}")
 
         with open(out_file, 'w') as out:
             out.write("actual\tpredicted\n")
             for j, prediction in enumerate(all_preds):
                 label = all_labels[j]
                 out.write(f"{label}\t{prediction}\n")
+
+        summary.write(f"{current_epoch}\t{avg_train_loss:.5f}\t{avg_loss:.5f}\t{pearson:.5f}\t{spearman:.5f}\n")
 
         model.update_epoch(current_epoch)
 
@@ -76,10 +86,11 @@ def main():
 
     if args.m is not None:
         summary = open(summary_file, 'a')
+        write_header = False
         model = load_model(args.i, args.v, model_checkpoint=args.m)
     elif args.c is not None:
         summary = open(summary_file, 'w')
-        summary.write("epoch\taverage_train_loss\taverage_eval_loss\n")
+        write_header = True
         model = load_model(args.i, args.v, config_file=args.c)
     else:
         raise ValueError("Model or config file must be given")
@@ -90,7 +101,7 @@ def main():
         avg_loss, all_preds, all_labels = model.evaluate_model()
         print(f"Epoch {current_epoch}\t- Eval loss:\t{avg_loss:.4f}")
 
-    finetune(model, summary, args.e, args.o)
+    finetune(model, summary, args.e, args.o, header=write_header)
 
     summary.close()
 

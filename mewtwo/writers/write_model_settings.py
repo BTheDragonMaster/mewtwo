@@ -18,7 +18,7 @@ def get_hyperoptimization_configs():
     model_configs = []
 
     batch_sizes = [4, 8]
-    learning_rates = [1e-5, 5e-5, 1e-4, 5e-4]
+    learning_rates = [1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
     hidden_layer_dropouts = [0.1, 0.2]
 
     for batch_size in batch_sizes:
@@ -45,8 +45,8 @@ def get_hyperoptimization_configs():
                     for scheduler_option in [s for s in SchedulerType] + [None]:
                         if scheduler_option == SchedulerType.COS_ANNEAL_WARMUP:
 
-                            training_epochs = 20
-                            warmup_epochs_options = [10]
+                            training_epochs = 10
+                            warmup_epochs_options = [2]
                         else:
                             training_epochs = None
                             warmup_epochs_options = [None]
