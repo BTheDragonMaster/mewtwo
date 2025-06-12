@@ -2,7 +2,7 @@ import argparse
 import os
 
 from mewtwo.machine_learning.transformer.model import load_model
-from mewtwo.machine_learning.transformer.config.config_types import SchedulerType
+from mewtwo.machine_learning.transformer.config.config_types import SchedulerType, EarlyStoppingMetricType
 
 from scipy.stats import pearsonr, spearmanr
 
@@ -34,15 +34,49 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
+def metric_has_improved(old_metric, new_metric, metric_type):
+    if metric_type in EarlyStoppingMetricType.MAX_METRICS:
+        if new_metric > old_metric:
+            return True
+        else:
+            return False
+    elif metric_type in EarlyStoppingMetricType.MIN_METRICS:
+        if new_metric < old_metric:
+            return True
+        else:
+            return False
+    else:
+        raise ValueError(f"Unrecognised early stopping metric: {metric_type.name}")
+
+
+def get_metric(eval_loss, pearson, spearman, metric_type):
+    if metric_type == EarlyStoppingMetricType.PEARSON_R:
+        return pearson
+    elif metric_type == EarlyStoppingMetricType.SPEARMAN_R:
+        return spearman
+    elif metric_type == EarlyStoppingMetricType.EVAL_LOSS:
+        return eval_loss
+    else:
+        raise ValueError(f"Unrecognised early stopping metric: {metric_type.name}")
+
+
 def finetune(model, summary, epochs, out_dir, header=False):
     if header:
         summary.write("epoch\taverage_train_loss\taverage_eval_loss\tpearsonr\tspearmanr\n")
     config_file = os.path.join(out_dir, "model.config")
 
-    current_epoch = model.config.epochs
+    starting_epoch = model.config.epochs
+    epochs_without_improvement = 0
+
+    best_model_path = os.path.join(out_dir, "best_checkpoint.pt")
+    if model.config.early_stopping_config and \
+            model.config.early_stopping_config.metric in EarlyStoppingMetricType.MAX_METRICS:
+        best_metric = -1.1
+    else:
+        best_metric = 1.1
 
     for i in range(epochs):
-        current_epoch += i + 1
+        current_epoch = starting_epoch + i + 1
         print(f"LR at epoch {current_epoch}: {model.optimizer.param_groups[0]['lr']}")
 
         out_file = os.path.join(out_dir, f"epoch_{current_epoch:03d}.txt")
@@ -50,8 +84,8 @@ def finetune(model, summary, epochs, out_dir, header=False):
         avg_train_loss = model.train_model()
         avg_loss, all_preds, all_labels = model.evaluate_model()
 
-        pearson = pearsonr(all_labels, all_preds)
-        spearman = spearmanr(all_labels, all_preds)
+        pearson = pearsonr(all_labels, all_preds).statistic
+        spearman = spearmanr(all_labels, all_preds).statistic
 
         print(f"Epoch {current_epoch}\t- Train loss:\t{avg_train_loss:.4f}")
         print(f" \t- Eval loss:\t{avg_loss:.4f}")
@@ -69,8 +103,21 @@ def finetune(model, summary, epochs, out_dir, header=False):
 
         model.update_epoch(current_epoch)
 
-        if model.scheduler is not None and model.config.scheduler_config.type == SchedulerType.REDUCE_ON_PLATEAU:
+        if model.scheduler is not None and \
+                model.config.scheduler_config.type in SchedulerType.REDUCE_ON_PLATEAU_SCHEDULERS:
             model.scheduler.step(avg_loss)
+
+        if model.config.early_stopping_config is not None:
+            metric = get_metric(avg_loss, pearson, spearman, model.config.early_stopping_config.metric)
+            if metric_has_improved(best_metric, metric, model.config.early_stopping_config.metric):
+                best_metric = metric
+                epochs_without_improvement = 0
+                model.save_model_checkpoint(best_model_path)
+            else:
+                epochs_without_improvement += 1
+                if epochs_without_improvement >= model.config.early_stopping_config.patience:
+                    print(f"Early stopping at epoch {current_epoch}")
+                    break
 
     model.config.write_model_config(config_file)
 

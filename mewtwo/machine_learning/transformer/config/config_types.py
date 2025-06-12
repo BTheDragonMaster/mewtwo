@@ -1,6 +1,15 @@
 from enum import Enum, Flag
 
 
+class EarlyStoppingMetricType(Flag):
+    EVAL_LOSS = 1
+    SPEARMAN_R = 2
+    PEARSON_R = 4
+
+    MAX_METRICS = PEARSON_R | SPEARMAN_R
+    MIN_METRICS = EVAL_LOSS
+
+
 class LossFunctionType(Flag):
     MSE = 1
     PEARSON = 2
@@ -30,9 +39,14 @@ class FinetuningType(Enum):
         return FinetuningType[string_description.upper()]
 
 
-class SchedulerType(Enum):
+class SchedulerType(Flag):
     REDUCE_ON_PLATEAU = 1
     COS_ANNEAL_WARMUP = 2  # Cosine annealing with warmup
+    REDUCE_ON_PLATEAU_WARMUP = 4
+    WARMUP_ONLY = 8
+
+    WARMUP_SCHEDULERS = COS_ANNEAL_WARMUP | REDUCE_ON_PLATEAU_WARMUP | WARMUP_ONLY
+    REDUCE_ON_PLATEAU_SCHEDULERS = REDUCE_ON_PLATEAU | REDUCE_ON_PLATEAU_WARMUP
 
     @staticmethod
     def from_string_description(string_description) -> "SchedulerType":

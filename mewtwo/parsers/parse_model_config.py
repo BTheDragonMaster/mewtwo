@@ -3,7 +3,8 @@ from typing import Optional, Union
 from math import isclose
 
 
-from mewtwo.machine_learning.transformer.config.config_types import LossFunctionType, FinetuningType, SchedulerType
+from mewtwo.machine_learning.transformer.config.config_types import EarlyStoppingMetricType, LossFunctionType, \
+    FinetuningType, SchedulerType
 
 
 @dataclass
@@ -87,13 +88,20 @@ class SchedulerConfig:
     type: SchedulerType
     training_epochs: Optional[int] = None
     warmup_epochs: Optional[int] = None
+    plateau_patience: Optional[int] = None
+    factor: Optional[float] = None
 
     def __post_init__(self):
-        if self.type == SchedulerType.COS_ANNEAL_WARMUP:
-            assert self.training_epochs is not None
+        if self.type in SchedulerType.WARMUP_SCHEDULERS:
             assert self.warmup_epochs is not None
-            if self.warmup_epochs > self.training_epochs:
-                raise ValueError("Number of warmup steps is greater than the number of training steps.")
+
+            if self.type == SchedulerType.COS_ANNEAL_WARMUP:
+                assert self.training_epochs is not None
+                if self.warmup_epochs > self.training_epochs:
+                    raise ValueError("Number of warmup steps is greater than the number of training steps.")
+        if self.type in SchedulerType.REDUCE_ON_PLATEAU_SCHEDULERS:
+            assert self.plateau_patience is not None
+            assert self.factor is not None
 
     def __eq__(self, other):
         if type(self) == type(other) and \
@@ -109,6 +117,8 @@ class SchedulerConfig:
         scheduler_type = None
         training_epochs = None
         warmup_epochs = None
+        plateau_patience = None
+        factor = None
 
         with open(input_file, 'r') as model_config:
             for line in model_config:
@@ -120,11 +130,49 @@ class SchedulerConfig:
                     training_epochs = int(value)
                 if field == "scheduler_warmup_epochs":
                     warmup_epochs = int(value)
+                if field == "plateau_patience":
+                    plateau_patience = int(value)
+                if field == "factor":
+                    factor = float(value)
 
         if scheduler_type is None:
             return None
         else:
-            return SchedulerConfig(scheduler_type, training_epochs, warmup_epochs)
+            return SchedulerConfig(scheduler_type, training_epochs, warmup_epochs, plateau_patience, factor)
+
+
+@dataclass
+class EarlyStoppingConfig:
+    metric: EarlyStoppingMetricType
+    patience: int
+
+    def __post_init__(self):
+        assert self.metric is not None
+        assert self.patience is not None
+
+    def __eq__(self, other):
+        if type(self) == type(other) and self.metric == other.metric and self.patience == other.patience:
+            return True
+        return False
+
+    @classmethod
+    def from_file(cls, input_file) -> Union["EarlyStoppingConfig", None]:
+        metric = None
+        patience = None
+
+        with open(input_file, 'r') as model_config:
+            for line in model_config:
+                line = line.strip()
+                field, value = line.split('\t')
+                if field == "early_stopping_patience":
+                    metric = EarlyStoppingMetricType[value]
+                if field == "early_stopping_patience":
+                    patience = int(value)
+
+        if metric is None or patience is None:
+            return None
+        else:
+            return EarlyStoppingConfig(metric, patience)
 
 
 @dataclass
@@ -135,6 +183,7 @@ class ModelConfig:
     loss_function_config: LossFunctionConfig
     epochs: int
     batch_size: int
+    early_stopping_config: Optional[EarlyStoppingConfig] = None
     adapter_config: Optional[AdapterConfig] = None
     scheduler_config: Optional[SchedulerConfig] = None
 
@@ -144,7 +193,8 @@ class ModelConfig:
             isclose(self.hidden_layer_dropout, other.hidden_layer_dropout, rel_tol=0.01) and \
             self.loss_function_config == other.loss_function_config and \
             self.adapter_config == other.adapter_config and \
-                self.scheduler_config == other.scheduler_config:
+                self.scheduler_config == other.scheduler_config and \
+                self.early_stopping_config == other.early_stopping_config:
 
             return True
         else:
@@ -175,6 +225,14 @@ class ModelConfig:
                     out.write(f"scheduler_training_epochs\t{self.scheduler_config.training_epochs}\n")
                 if self.scheduler_config.warmup_epochs is not None:
                     out.write(f"scheduler_warmup_epochs\t{self.scheduler_config.warmup_epochs}\n")
+                if self.scheduler_config.plateau_patience is not None:
+                    out.write(f"plateau_patience\t{self.scheduler_config.plateau_patience}\n")
+                if self.scheduler_config.factor is not None:
+                    out.write(f"factor\t{self.scheduler_config.factor}\n")
+
+            if self.early_stopping_config is not None:
+                out.write(f"early_stopping_patience\t{self.early_stopping_config.patience}\n")
+                out.write(f"early_stopping_metric\t{self.early_stopping_config.metric.name}\n")
 
     @classmethod
     def from_file(cls, input_file):
@@ -182,6 +240,7 @@ class ModelConfig:
         adapter_config = AdapterConfig.from_file(input_file)
         scheduler_config = SchedulerConfig.from_file(input_file)
         loss_function_config = LossFunctionConfig.from_file(input_file)
+        early_stopping_config = EarlyStoppingConfig.from_file(input_file)
 
         field_to_value = {}
 
@@ -197,5 +256,6 @@ class ModelConfig:
                    loss_function_config,
                    int(field_to_value["training_epochs"]),
                    int(field_to_value["batch_size"]),
+                   early_stopping_config,
                    adapter_config,
                    scheduler_config)

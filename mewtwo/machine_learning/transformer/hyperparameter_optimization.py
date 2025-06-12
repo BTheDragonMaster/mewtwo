@@ -58,8 +58,6 @@ def main():
 
             copy(file_path, failed_path)
 
+
 if __name__ == "__main__":
     main()
-
-
-
