@@ -2,7 +2,8 @@
 from argparse import ArgumentParser
 import os
 
-from mewtwo.parsers.parse_model_config import ModelConfig, AdapterConfig, SchedulerConfig, LossFunctionConfig, EarlyStoppingConfig
+from mewtwo.parsers.parse_model_config import ModelConfig, AdapterConfig, SchedulerConfig, LossFunctionConfig, \
+    EarlyStoppingConfig, HiddenLayerConfig
 
 from mewtwo.machine_learning.transformer.config.config_types import FinetuningType, LossFunctionType, SchedulerType, \
     EarlyStoppingMetricType
@@ -29,6 +30,7 @@ def parse_arguments():
                                                                            "REDUCE_ON_PLATEAU_WARMUP", "WARMUP_ONlY"])
     parser.add_argument('--plateau_patiences', type=int, nargs='*', default=[2, 3])
     parser.add_argument('--plateau_factors', type=float, nargs='*', default=[0.5])
+    parser.add_argument('--second_layer_dim', type=int, nargs='*', default=[])
     parser.add_argument('-o', type=str, required=True, help="Output directory")
     args = parser.parse_args()
     return args
@@ -41,7 +43,7 @@ def get_hyperoptimization_configs(batch_sizes, learning_rates,
                                   warmup_epochs_options, loss_functions, loss_function_alpha,
                                   scheduler_types, use_early_stopping,
                                   early_stopping_metrics, early_stopping_patiences,
-                                  plateau_patiences, plateau_factors):
+                                  plateau_patiences, plateau_factors, second_layer_dims):
     model_configs = []
 
     for batch_size in batch_sizes:
@@ -99,32 +101,38 @@ def get_hyperoptimization_configs(batch_sizes, learning_rates,
 
                                             for learning_rate in learning_rates:
                                                 for hidden_layer_dropout in hidden_layer_dropouts:
-                                                    early_stopping_config = None
+                                                    if not second_layer_dims:
+                                                        second_layer_dims = [None]
 
-                                                    if not use_early_stopping:
-                                                        early_stopping_metric_options = [None]
-                                                        early_stopping_patience_options = [None]
+                                                    for second_layer_dim in second_layer_dims:
+                                                        hidden_layer_config = HiddenLayerConfig(hidden_layer_dropout,
+                                                                                                second_layer_dim)
+                                                        early_stopping_config = None
 
-                                                    else:
-                                                        early_stopping_metric_options = early_stopping_metrics[:]
-                                                        early_stopping_patience_options = early_stopping_patiences[:]
+                                                        if not use_early_stopping:
+                                                            early_stopping_metric_options = [None]
+                                                            early_stopping_patience_options = [None]
 
-                                                    for early_stopping_metric in early_stopping_metric_options:
-                                                        for early_stopping_patience in early_stopping_patience_options:
-                                                            if early_stopping_metric is not None and \
-                                                                    early_stopping_patience is not None:
-                                                                early_stopping_config = EarlyStoppingConfig(
-                                                                    EarlyStoppingMetricType[early_stopping_metric],
-                                                                    early_stopping_patience)
-                                                            model_config = ModelConfig(finetuning_type, learning_rate,
-                                                                                       hidden_layer_dropout,
-                                                                                       loss_function_config, 0,
-                                                                                       batch_size,
-                                                                                       early_stopping_config,
-                                                                                       adapter_config,
-                                                                                       scheduler_config)
+                                                        else:
+                                                            early_stopping_metric_options = early_stopping_metrics[:]
+                                                            early_stopping_patience_options = early_stopping_patiences[:]
 
-                                                            model_configs.append(model_config)
+                                                        for early_stopping_metric in early_stopping_metric_options:
+                                                            for early_stopping_patience in early_stopping_patience_options:
+                                                                if early_stopping_metric is not None and \
+                                                                        early_stopping_patience is not None:
+                                                                    early_stopping_config = EarlyStoppingConfig(
+                                                                        EarlyStoppingMetricType[early_stopping_metric],
+                                                                        early_stopping_patience)
+                                                                model_config = ModelConfig(finetuning_type, learning_rate,
+                                                                                           hidden_layer_config,
+                                                                                           loss_function_config, 0,
+                                                                                           batch_size,
+                                                                                           early_stopping_config,
+                                                                                           adapter_config,
+                                                                                           scheduler_config)
+
+                                                                model_configs.append(model_config)
 
     return model_configs
 
@@ -148,7 +156,7 @@ def main():
                                                   args.loss_function_alpha, args.scheduler_types,
                                                   args.use_early_stopping,
                                                   early_stopping_metric_options, early_stopping_patience_options,
-                                                  args.plateau_patiences, args.plateau_factors)
+                                                  args.plateau_patiences, args.plateau_factors, args.second_layer_dim)
 
     for i, model_config in enumerate(model_configs):
         out_file = os.path.join(args.o, f"model_{i + 1:03}.config")

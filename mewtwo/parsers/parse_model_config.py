@@ -176,10 +176,40 @@ class EarlyStoppingConfig:
 
 
 @dataclass
+class HiddenLayerConfig:
+    dropout: float
+    second_layer_dim: Optional[int]
+
+    def __eq__(self, other):
+        if type(self) == type(other) and isclose(self.dropout, other.dropout, rel_tol=0.01) and \
+                self.second_layer_dim == other.second_layer_dim:
+            return True
+        return False
+
+    @classmethod
+    def from_file(cls, input_file) -> Union["HiddenLayerConfig", None]:
+        dropout = None
+        second_layer_dim = None
+
+        with open(input_file, 'r') as model_config:
+            for line in model_config:
+                line = line.strip()
+                field, value = line.split('\t')
+                if field == "hidden_layer_dropout":
+                    dropout = float(value)
+                if field == "second_layer_dim":
+                    second_layer_dim = int(value)
+
+        if dropout is None:
+            raise ValueError("Hidden layer config must specify dropout")
+        else:
+            return HiddenLayerConfig(dropout, second_layer_dim)
+
+@dataclass
 class ModelConfig:
     finetuning_mode: FinetuningType
     learning_rate: float
-    hidden_layer_dropout: float
+    hidden_layer_config: HiddenLayerConfig
     loss_function_config: LossFunctionConfig
     epochs: int
     batch_size: int
@@ -190,7 +220,7 @@ class ModelConfig:
     def __eq__(self, other):
         if self.finetuning_mode == other.finetuning_mode and \
             isclose(self.learning_rate, other.learning_rate, rel_tol=0.01) and \
-            isclose(self.hidden_layer_dropout, other.hidden_layer_dropout, rel_tol=0.01) and \
+            self.hidden_layer_config == other.hidden_layer_config and \
             self.loss_function_config == other.loss_function_config and \
             self.adapter_config == other.adapter_config and \
                 self.scheduler_config == other.scheduler_config and \
@@ -206,7 +236,9 @@ class ModelConfig:
         with open(out_file, 'w') as out:
             out.write(f"finetuning_mode\t{self.finetuning_mode.name}\n")
             out.write(f"learning_rate\t{self.learning_rate:.10f}\n")
-            out.write(f"hidden_layer_dropout\t{self.hidden_layer_dropout:.2f}\n")
+            out.write(f"hidden_layer_dropout\t{self.hidden_layer_config.dropout:.2f}\n")
+            if self.hidden_layer_config.second_layer_dim:
+                out.write(f"second_layer_dim\t{self.hidden_layer_config.second_layer_dim}\n")
             out.write(f"loss_function\t{self.loss_function_config.type.name}\n")
             out.write(f"training_epochs\t{self.epochs}\n")
             out.write(f"batch_size\t{self.batch_size}\n")
@@ -241,6 +273,7 @@ class ModelConfig:
         scheduler_config = SchedulerConfig.from_file(input_file)
         loss_function_config = LossFunctionConfig.from_file(input_file)
         early_stopping_config = EarlyStoppingConfig.from_file(input_file)
+        hidden_layer_config = HiddenLayerConfig.from_file(input_file)
 
         field_to_value = {}
 
@@ -252,7 +285,7 @@ class ModelConfig:
 
         return cls(FinetuningType.from_string_description(field_to_value["finetuning_mode"]),
                    float(field_to_value["learning_rate"]),
-                   float(field_to_value["hidden_layer_dropout"]),
+                   hidden_layer_config,
                    loss_function_config,
                    int(field_to_value["training_epochs"]),
                    int(field_to_value["batch_size"]),

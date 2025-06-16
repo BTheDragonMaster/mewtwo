@@ -101,7 +101,7 @@ class Model:
         return avg_loss, all_preds, all_labels
 
 
-def initialise(finetuning_mode: FinetuningType, dropout, adapter_config):
+def initialise(finetuning_mode: FinetuningType, model_config):
     tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
     base_model = BertModel.from_pretrained("zhihan1996/DNABERT-2-117M")
 
@@ -110,12 +110,16 @@ def initialise(finetuning_mode: FinetuningType, dropout, adapter_config):
             param.requires_grad = False
 
     if finetuning_mode == FinetuningType.ADAPTER:
-        assert adapter_config is not None
-        model = DNABERTRegressor(base_model, dropout=dropout, use_adapters=True, lora_r=adapter_config.rank,
-                                 lora_alpha=adapter_config.alpha,
-                                 lora_dropout=adapter_config.dropout)
+        assert model_config.adapter_config is not None
+
+        model = DNABERTRegressor(base_model, dropout=model_config.hidden_layer_config.dropout, use_adapters=True,
+                                 lora_r=model_config.adapter_config.rank,
+                                 lora_alpha=model_config.adapter_config.alpha,
+                                 lora_dropout=model_config.adapter_config.dropout,
+                                 second_layer_dim=model_config.hidden_layer_config.second_layer_dim)
     else:
-        model = DNABERTRegressor(base_model, dropout=dropout, use_adapters=False)
+        model = DNABERTRegressor(base_model, dropout=model_config.hidden_layer_config.dropout, use_adapters=False,
+                                 second_layer_dim=model_config.hidden_layer_config.second_layer_dim)
 
     return model, tokenizer
 
@@ -147,8 +151,7 @@ def load_model(input_training_data, input_validation_data, config_file=None, mod
     else:
         raise ValueError("Config file or model checkpoint must be given")
 
-    model, tokenizer = initialise(model_config.finetuning_mode, model_config.hidden_layer_dropout,
-                                  model_config.adapter_config)
+    model, tokenizer = initialise(model_config.finetuning_mode, model_config)
 
     train_dataloader = prepare_data(input_training_data, tokenizer, True, batch_size=model_config.batch_size)
     eval_dataloader = prepare_data(input_validation_data, tokenizer, True, batch_size=model_config.batch_size)
