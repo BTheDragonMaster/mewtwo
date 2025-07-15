@@ -123,8 +123,6 @@ def get_sequence_type(sequence: str) -> SeqType:
     except ValueError:
         pass
 
-    seq_types = []
-
     if is_dna and is_rna:
         return SeqType.DNA | SeqType.RNA
     elif is_dna:
@@ -132,4 +130,4 @@ def get_sequence_type(sequence: str) -> SeqType:
     elif is_rna:
         return SeqType.RNA
     else:
-        raise ValueError("Sequence is not DNA or RNA")
+        raise ValueError(f"Sequence is not DNA or RNA: {sequence}")

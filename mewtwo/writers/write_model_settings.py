@@ -27,7 +27,7 @@ def parse_arguments():
     parser.add_argument('--early_stopping_patiences', type=int, nargs='*', default=[2, 3])
     parser.add_argument('--use_early_stopping', action="store_true")
     parser.add_argument('--scheduler_types', type=str, nargs='*', default=["COS_ANNEAL_WARMUP", "REDUCE_ON_PLATEAU",
-                                                                           "REDUCE_ON_PLATEAU_WARMUP", "WARMUP_ONlY"])
+                                                                           "REDUCE_ON_PLATEAU_WARMUP", "WARMUP_ONLY"])
     parser.add_argument('--plateau_patiences', type=int, nargs='*', default=[2, 3])
     parser.add_argument('--plateau_factors', type=float, nargs='*', default=[0.5])
     parser.add_argument('--second_layer_dim', type=int, nargs='*', default=[])

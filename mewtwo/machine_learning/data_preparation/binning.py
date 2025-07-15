@@ -1,7 +1,6 @@
 from math import isclose
 
 
-
 def bin_data(y, n_bins: int = 5):
     bin_ranges = []
     range_start = 0.0
@@ -26,7 +25,6 @@ def bin_data(y, n_bins: int = 5):
                 bin_range = bin_ranges[bin_index]
             except IndexError:
                 raise ValueError(f"Expected value between 0.0 and 1.0. Got {y_data}")
-
 
         bins.append(bin_index)
 

@@ -8,9 +8,13 @@ from mewtwo.embeddings.terminator.loop import get_max_loop_size
 
 
 class Terminator:
-    def __init__(self, start: int, end: int, pot: int, species: str, chromosome: str, strand: str,
-                 sequence: RNASequence, termination_efficiency: Optional[float],
-                 hairpin: Union[RNAFoldHairpin, TransTermHPHairpin], a_tract: ATract, u_tract: UTract):
+    def __init__(self,
+                 hairpin: Union[RNAFoldHairpin, TransTermHPHairpin], a_tract: ATract, u_tract: UTract,
+                 sequence: RNASequence,
+                 termination_efficiency: Optional[float] = None,
+                 start: Optional[int] = None, end: Optional[int] = None, pot: Optional[int] = None,
+                 species: Optional[str] = None, chromosome: Optional[str] = None, strand: Optional[str] = None,
+                 is_synthetic: bool = False):
         self.start = start
         self.end = end
         self.pot = pot
@@ -23,6 +27,7 @@ class Terminator:
         self.hairpin = hairpin
         self.a_tract = a_tract
         self.u_tract = u_tract
+        self.is_synthetic = is_synthetic
 
     def to_vector(self, max_loop_size: int, max_stem_size: int = 10, a_tract_size: int = 10, u_tract_size: int = 10,
                   one_hot: bool = False) -> list[int]:
@@ -33,6 +38,9 @@ class Terminator:
         vector.extend(self.hairpin.loop.to_vector(max_loop_size=max_loop_size, one_hot=one_hot))
         vector.extend(self.u_tract.to_vector(u_tract_size=u_tract_size, one_hot=one_hot))
         return vector
+
+    def get_base_coords(self, max_loop_size, max_stem_size, a_tract_size, u_tract_size):
+        pass
 
 
 def get_terminator_part_sizes(terminators: list[Terminator]) -> tuple[int, int, int, int]:

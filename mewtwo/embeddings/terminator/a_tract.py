@@ -1,9 +1,15 @@
-from mewtwo.embeddings.sequence import RNASequence
+from mewtwo.embeddings.sequence import RNASequence, DNASequence, get_sequence_type, SeqType, convert_to_rna
 from mewtwo.embeddings.bases import Base, base_to_vector
 
 
 class ATract:
-    def __init__(self, sequence: RNASequence) -> None:
+    def __init__(self, sequence: str) -> None:
+
+        seq_type = get_sequence_type(sequence)
+        if SeqType.RNA in seq_type:
+            sequence = RNASequence(sequence)
+        else:
+            sequence = convert_to_rna(DNASequence(sequence))
         self.sequence = sequence
 
     def to_vector(self, a_tract_size: int = 10, one_hot: bool = False) -> list[int]:

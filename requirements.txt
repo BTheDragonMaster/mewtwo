@@ -1,0 +1,13 @@
+torch==2.2.2
+peft==0.10.0
+scikit-learn==1.6.1
+transformers==4.40.1
+mewtwo==0.0.1
+pip==25.0
+zlib==1.2.13
+wheel==0.45.1
+openssl==3.0.16
+setuptools==72.1.0
+einops==0.8.1
+scipy==1.15.2
+joblib==1.4.2

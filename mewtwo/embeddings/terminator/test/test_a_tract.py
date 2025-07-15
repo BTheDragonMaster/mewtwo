@@ -6,7 +6,7 @@ from mewtwo.embeddings.sequence import RNASequence
 
 class TestATract(unittest.TestCase):
     def test_to_vector(self):
-        a_tract_1 = ATract(RNASequence("ACGU"))
+        a_tract_1 = ATract("ACGU")
 
         self.assertEqual(a_tract_1.to_vector(4), [1, 0, 2,
                                                   0, 1, 3,

@@ -1,7 +1,7 @@
 from mewtwo.parsers.tabular import Tabular
 from mewtwo.embeddings.terminator.hairpin import RNAFoldHairpin, TransTermHPHairpin
 from mewtwo.embeddings.terminator.terminator import Terminator
-from mewtwo.embeddings.sequence import DNASequence, convert_to_rna, convert_to_dna
+from mewtwo.embeddings.sequence import convert_to_dna
 from mewtwo.embeddings.terminator.a_tract import ATract
 from mewtwo.embeddings.terminator.u_tract import UTract
 from mewtwo.machine_learning.random_forest.train_random_forest import train_random_forest
@@ -64,6 +64,7 @@ def sort_by_species(terminators: list[Terminator]) -> dict[str, list[Terminator]
 
     return species_to_terminators
 
+
 def get_termite_terminators(input_file: str, prioritise_rnafold: bool = True, species_column: bool = False,
                             te_only: bool = True) -> list[Terminator]:
     """
@@ -97,13 +98,15 @@ def get_termite_terminators(input_file: str, prioritise_rnafold: bool = True, sp
         start = int(termite_data.get_value(datapoint, 'start'))
         end = int(termite_data.get_value(datapoint, 'end'))
         strand = termite_data.get_value(datapoint, 'strand')
-        sequence = convert_to_rna(DNASequence(termite_data.get_value(datapoint, 'sequence')))
+        sequence = termite_data.get_value(datapoint, 'sequence')
+
+        print(sequence)
 
         te = termite_data.get_value(datapoint, "termination efficiency")
         if te == '.':
             te = None
         elif 0 <= float(te) <= 100:
-            te = float(te)
+            te = float(te) / 100
         else:
             print(datapoint, te)
             te = None
@@ -114,35 +117,33 @@ def get_termite_terminators(input_file: str, prioritise_rnafold: bool = True, sp
         if termite_data.get_value(datapoint, 'rnafold') == '+':
 
             hairpin = RNAFoldHairpin(terminator_id,
-                                     termite_data.get_value(datapoint, "rnafold POT distance to hairpin"),
-                                     termite_data.get_value(datapoint, "rnafold energy"),
+                                     float(termite_data.get_value(datapoint, "rnafold energy")),
                                      termite_data.get_value(datapoint, "rnafold hairpin"),
-                                     termite_data.get_value(datapoint, "rnafold hairpin structure"))
+                                     termite_data.get_value(datapoint, "rnafold hairpin structure"),
+                                     int(termite_data.get_value(datapoint, "rnafold POT distance to hairpin")))
             if not hairpin.contains_multiple_hairpins():
-                a_tract_sequence = convert_to_rna(DNASequence(termite_data.get_value(datapoint, "rnafold a tract")))
-                a_tract = ATract(a_tract_sequence)
-                u_tract_sequence = convert_to_rna(DNASequence(termite_data.get_value(datapoint, "rnafold u tract")))
-                relative_pot = int(termite_data.get_value(datapoint, "rnafold POT distance to hairpin"))
-                u_tract = UTract(u_tract_sequence, relative_pot)
 
-                terminator = Terminator(start, end, pot, species, chromosome, strand, sequence, te, hairpin, a_tract,
-                                        u_tract)
+                a_tract = ATract(termite_data.get_value(datapoint, "rnafold a tract"))
+                relative_pot = int(termite_data.get_value(datapoint, "rnafold POT distance to hairpin"))
+                u_tract = UTract(termite_data.get_value(datapoint, "rnafold u tract"), relative_pot)
+
+                terminator = Terminator(hairpin, a_tract,
+                                        u_tract, sequence, te, start, end, pot, species, chromosome, strand)
                 rnafold_terminators[terminator_id] = terminator
 
         if termite_data.get_value(datapoint, 'transtermhp') == '+':
             hairpin = TransTermHPHairpin(terminator_id,
-                                         termite_data.get_value(datapoint, "transtermhp POT distance to hairpin"),
                                          termite_data.get_value(datapoint, "transtermhp hairpin score"),
-                                         termite_data.get_value(datapoint, "transtermhp hairpin"))
+                                         termite_data.get_value(datapoint, "transtermhp hairpin"),
+                                         termite_data.get_value(datapoint, "transtermhp POT distance to hairpin"))
             if not hairpin.contains_multiple_hairpins():
-                a_tract_sequence = convert_to_rna(DNASequence(termite_data.get_value(datapoint, "transtermhp a tract")))
-                a_tract = ATract(a_tract_sequence)
-                u_tract_sequence = convert_to_rna(DNASequence(termite_data.get_value(datapoint, "transtermhp u tract")))
-                relative_pot = int(termite_data.get_value(datapoint, "transtermhp POT distance to hairpin"))
-                u_tract = UTract(u_tract_sequence, relative_pot)
 
-                terminator = Terminator(start, end, pot, species, chromosome, strand, sequence, te, hairpin, a_tract,
-                                        u_tract)
+                a_tract = ATract(termite_data.get_value(datapoint, "transtermhp a tract"))
+                relative_pot = int(termite_data.get_value(datapoint, "transtermhp POT distance to hairpin"))
+                u_tract = UTract(termite_data.get_value(datapoint, "transtermhp u tract"), relative_pot)
+
+                terminator = Terminator(hairpin, a_tract,
+                                        u_tract, sequence, te, start, end, pot, species, chromosome, strand)
                 transtermhp_terminators[terminator_id] = terminator
 
     terminators = []
@@ -181,10 +182,10 @@ def rnafold_hairpins_from_termite(input_file: str, get_rnafold: bool = True, get
         hairpin_id = '|'.join(datapoint)
         if termite_data.get_value(datapoint, 'rnafold') == '+':
             hairpin = RNAFoldHairpin(hairpin_id,
-                                     termite_data.get_value(datapoint, "rnafold POT distance to hairpin"),
                                      termite_data.get_value(datapoint, "rnafold energy"),
                                      termite_data.get_value(datapoint, "rnafold hairpin"),
-                                     termite_data.get_value(datapoint, "rnafold hairpin structure"))
+                                     termite_data.get_value(datapoint, "rnafold hairpin structure"),
+                                     termite_data.get_value(datapoint, "rnafold POT distance to hairpin"))
             rnafold_hairpins[hairpin_id] = hairpin
         if termite_data.get_value(datapoint, 'transtermhp') == '+':
             hairpin = TransTermHPHairpin(hairpin_id,
@@ -228,7 +229,7 @@ if __name__ == "__main__":
             ecoli_terminators.extend(species_terminators)
 
     all_terminators = bacillus_terminators + ecoli_terminators
-    train_terminators, test_terminators, crossvalidation_sets = split_data(all_terminators, test_size=0.1)
+    train_terminators, test_terminators, crossvalidation_sets = split_data(all_terminators, "species", test_size=0.1)
 
     for crossval_nr, crossvalidation_set in crossvalidation_sets.items():
         out_dir = os.path.join(argv[2], f"crossvalidation_results_{crossval_nr}")

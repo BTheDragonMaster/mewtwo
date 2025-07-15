@@ -13,15 +13,21 @@ class CrossvalidationFold:
         self.test = test
 
 
-def split_data(terminators, test_size: float = 0.5, n_crossval_sets: int = 5):
+def split_data(terminators, attribute_for_splitting: str, test_size: float = 0.5, n_crossval_sets: int = 5,
+               n_bins: int = 5):
     max_loop, max_stem, max_a, max_u = get_terminator_part_sizes(terminators)
     x = []
     y = []
     labels = []
+
     for terminator in terminators:
         x.append(terminator.to_vector(max_loop, max_stem, max_a, max_u))
         y.append(terminator.te)
-        labels.append(terminator.species)
+        attribute = getattr(terminator, attribute_for_splitting)
+        labels.append(attribute)
+
+    if type(labels[0]) in (int, float):
+        labels = bin_data(labels, n_bins)
 
     sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=250589)
     sss.get_n_splits(x, labels)
