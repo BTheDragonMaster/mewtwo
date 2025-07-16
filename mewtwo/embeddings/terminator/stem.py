@@ -1,4 +1,4 @@
-from mewtwo.embeddings.bases import BasePair, Base
+from mewtwo.embeddings.bases import BasePair, Base, PairingType
 from mewtwo.embeddings.sequence import RNASequence
 
 
@@ -12,6 +12,7 @@ class Stem:
         self.upstream_structure = upstream_structure
         self.downstream_sequence = downstream_sequence
         self.downstream_structure = downstream_structure
+        self.basepairs = self.get_basepairs()
 
     def get_basepairs(self):
         basepairs = []
@@ -23,7 +24,7 @@ class Stem:
         for i, character in enumerate(self.upstream_structure):
             if character == '(':
                 while reverse_downstream_structure[downstream_index] != ')':
-                    basepairs.append(BasePair(None, reverse_downstream_sequence[downstream_index], False))
+                    basepairs.append(BasePair(Base.ZERO_PADDING, reverse_downstream_sequence[downstream_index], False))
                     downstream_index += 1
                 basepairs.append(
                     BasePair(self.upstream_sequence[i], reverse_downstream_sequence[downstream_index], True))
@@ -35,10 +36,29 @@ class Stem:
                                               reverse_downstream_sequence[downstream_index], False))
                     downstream_index += 1
                 else:
-                    basepairs.append(BasePair(self.upstream_sequence[i], None, False))
+                    basepairs.append(BasePair(self.upstream_sequence[i], Base.ZERO_PADDING, False))
 
         return basepairs
 
+    def to_vector(self, max_stem_size: int, one_hot: bool = False,
+                  pairing_type: PairingType = PairingType.STRUCTURE_BASED) -> list[int]:
+        vector = []
 
-    def to_vector(self, max_stem_size):
-        pass
+        for i in range(max_stem_size):
+            try:
+                basepair = self.basepairs[i]
+            except IndexError:
+                basepair = BasePair(Base.ZERO_PADDING, Base.ZERO_PADDING, False)
+            vector.extend(basepair.to_vector(one_hot=one_hot, pairing_type=pairing_type))
+
+        return vector
+
+
+def get_max_stem_size(stems: list[Stem]) -> int:
+    max_stem_size = 0
+    for stem in stems:
+        stem_size = len(stem.basepairs)
+        if stem_size > max_stem_size:
+            max_stem_size += 1
+
+    return max_stem_size

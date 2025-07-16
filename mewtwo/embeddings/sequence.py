@@ -1,6 +1,6 @@
 from enum import Flag
 from typing import Union
-from mewtwo.embeddings.bases import Base, DNA_BASES, RNA_BASES
+from mewtwo.embeddings.bases import Base, base_to_vector
 
 
 class SeqType(Flag):
@@ -13,6 +13,8 @@ class Sequence:
         self.sequence = sequence.upper()
         self.seq_type = seq_type
         self._check_sequence()
+        self.seq_length = len(sequence)
+        self.__current_index = 0
 
     def __eq__(self, other):
         if self.sequence == other.sequence and type(self) == type(other):
@@ -25,6 +27,17 @@ class Sequence:
 
     def __repr__(self):
         return self.sequence
+
+    def __iter__(self):
+        return type(self)(self.sequence)
+
+    def __next__(self) -> Base:
+        if self.__current_index < self.seq_length:
+            base = Base[self.sequence[self.__current_index]]
+            self.__current_index += 1
+            return base
+        else:
+            raise StopIteration
 
     def __getitem__(self, index: Union[slice, int]) -> Union['Sequence', 'RNASequence', 'DNASequence', Base]:
         if isinstance(index, int):
@@ -40,17 +53,25 @@ class Sequence:
             if self.seq_type == SeqType.DNA:
                 try:
                     base = Base[character]
-                    if base not in DNA_BASES:
+                    if base not in Base.DNA:
                         raise ValueError(f"DNA sequence must be comprised of bases A, T, C, and G. Found {character} in {self.sequence}")
                 except KeyError:
                     raise ValueError(f"DNA sequence must be comprised of bases A, T, C, and G. Found {character} in {self.sequence}")
             elif self.seq_type == SeqType.RNA:
                 try:
                     base = Base[character]
-                    if base not in RNA_BASES:
+                    if base not in Base.RNA:
                         raise ValueError(f"RNA sequence must be comprised of bases A, C, G and U. Found {character} in {self.sequence}")
                 except KeyError:
                     raise ValueError(f"RNA sequence must be comprised of bases A, C, G, and U. Found {character} in {self.sequence}")
+
+    def to_vector(self, one_hot: bool = False) -> list[int]:
+        vector = []
+        for character in self.sequence:
+            base = Base[character]
+            vector.extend(base_to_vector(base, one_hot=one_hot))
+
+        return vector
 
 
 class DNASequence(Sequence):
@@ -102,8 +123,6 @@ def get_sequence_type(sequence: str) -> SeqType:
     except ValueError:
         pass
 
-    seq_types = []
-
     if is_dna and is_rna:
         return SeqType.DNA | SeqType.RNA
     elif is_dna:
@@ -111,4 +130,4 @@ def get_sequence_type(sequence: str) -> SeqType:
     elif is_rna:
         return SeqType.RNA
     else:
-        raise ValueError("Sequence is not DNA or RNA")
+        raise ValueError(f"Sequence is not DNA or RNA: {sequence}")
