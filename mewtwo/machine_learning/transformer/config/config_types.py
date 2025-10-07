@@ -33,6 +33,7 @@ class LossFunctionType(Flag):
 class FinetuningType(Enum):
     LINEAR_HEAD = 1
     ADAPTER = 2
+    FULL = 3
 
     @staticmethod
     def from_string_description(string_description) -> "FinetuningType":
