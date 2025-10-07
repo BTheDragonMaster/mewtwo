@@ -1,7 +1,8 @@
 import argparse
 import os
+from typing import TextIO
 
-from mewtwo.machine_learning.transformer.model import load_model
+from mewtwo.machine_learning.transformer.model import load_model, Model
 from mewtwo.machine_learning.transformer.config.config_types import SchedulerType, EarlyStoppingMetricType
 
 from scipy.stats import pearsonr, spearmanr
@@ -34,7 +35,7 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
-def metric_has_improved(old_metric, new_metric, metric_type):
+def metric_has_improved(old_metric: float, new_metric: float, metric_type: EarlyStoppingMetricType) -> bool:
     if metric_type in EarlyStoppingMetricType.MAX_METRICS:
         if new_metric > old_metric:
             return True
@@ -49,7 +50,7 @@ def metric_has_improved(old_metric, new_metric, metric_type):
         raise ValueError(f"Unrecognised early stopping metric: {metric_type.name}")
 
 
-def get_metric(eval_loss, pearson, spearman, metric_type):
+def get_metric(eval_loss: float, pearson: float, spearman: float, metric_type: EarlyStoppingMetricType) -> float:
     if metric_type == EarlyStoppingMetricType.PEARSON_R:
         return pearson
     elif metric_type == EarlyStoppingMetricType.SPEARMAN_R:
@@ -60,7 +61,7 @@ def get_metric(eval_loss, pearson, spearman, metric_type):
         raise ValueError(f"Unrecognised early stopping metric: {metric_type.name}")
 
 
-def finetune(model, summary, epochs, out_dir, header=False):
+def finetune(model: Model, summary: TextIO, epochs: int, out_dir: str, header=False) -> None:
     if header:
         summary.write("epoch\taverage_train_loss\taverage_eval_loss\tpearsonr\tspearmanr\n")
     config_file = os.path.join(out_dir, "model.config")
