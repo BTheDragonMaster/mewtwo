@@ -1,4 +1,4 @@
-from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold
+from sklearn.model_selection import StratifiedShuffleSplit, StratifiedKFold, ShuffleSplit, KFold
 from mewtwo.embeddings.terminator.terminator import get_terminator_part_sizes, Terminator
 from mewtwo.parsers.parse_dnabert_data import parse_dnabert_data
 from mewtwo.machine_learning.data_preparation.binning import bin_data
@@ -13,8 +13,48 @@ class CrossvalidationFold:
         self.test = test
 
 
+def split_data_no_stratification(terminators, test_size: float = 0.5, n_crossval_sets: int = 5):
+    max_loop, max_stem, max_a, max_u = get_terminator_part_sizes(terminators)
+
+    x = []
+
+    for terminator in terminators:
+        x.append(terminator.to_vector(max_loop, max_stem, max_a, max_u))
+
+    # Train/test split
+    ss = ShuffleSplit(n_splits=1, test_size=test_size, random_state=250589)
+    train_indices, test_indices = next(ss.split(x))
+
+    train_x = []
+    train_terminators = []
+
+    for index in train_indices:
+        train_x.append(x[index])
+        train_terminators.append(terminators[index])
+
+    test_terminators = []
+
+    for index in test_indices:
+        test_terminators.append(terminators[index])
+
+    # Cross-validation
+    kf = KFold(n_splits=n_crossval_sets, shuffle=True, random_state=100125)
+    crossvalidation_sets = {}
+
+    for i, (train_i, test_i) in enumerate(kf.split(train_x)):
+        train_terminators_c = [train_terminators[j] for j in train_i]
+        test_terminators_c = [train_terminators[j] for j in test_i]
+
+        crossvalidation_sets[i] = CrossvalidationFold(train_terminators_c, test_terminators_c)
+
+    return train_terminators, test_terminators, crossvalidation_sets
+
+
 def split_data(terminators, attribute_for_splitting: str, test_size: float = 0.5, n_crossval_sets: int = 5,
                n_bins: int = 5):
+    if attribute_for_splitting is None:
+        return split_data_no_stratification(terminators, test_size, n_crossval_sets)
+
     max_loop, max_stem, max_a, max_u = get_terminator_part_sizes(terminators)
     x = []
     y = []
@@ -29,9 +69,9 @@ def split_data(terminators, attribute_for_splitting: str, test_size: float = 0.5
     if type(labels[0]) in (int, float):
         labels = bin_data(labels, n_bins)
 
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=250589)
-    sss.get_n_splits(x, labels)
-    train_indices, test_indices = next(sss.split(x, labels))
+    splitter = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=250589)
+    splitter.get_n_splits(x, labels)
+    train_indices, test_indices = next(splitter.split(x, labels))
 
     train_x = []
     train_terminators = []
