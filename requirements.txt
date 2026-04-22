@@ -1,7 +1,7 @@
-torch==2.2.2
-peft==0.10.0
-scikit-learn==1.6.1
+torch
+peft
+scikit-learn
 transformers==4.40.1
 einops==0.8.1
-scipy==1.15.2
-joblib==1.4.2
+scipy
+joblib
