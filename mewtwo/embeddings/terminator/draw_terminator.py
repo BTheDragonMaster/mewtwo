@@ -44,6 +44,15 @@ class TerminatorDrawingOptions:
 
 DEFAULT_OPTIONS = TerminatorDrawingOptions()
 
+def rgba_to_flat_hex(r, g, b, a, bg=(255, 255, 255)):
+    r_out = int(round(a * r + (1 - a) * bg[0]))
+    g_out = int(round(a * g + (1 - a) * bg[1]))
+    b_out = int(round(a * b + (1 - a) * bg[2]))
+
+    return "#{:02X}{:02X}{:02X}".format(r_out, g_out, b_out)
+
+print(rgba_to_flat_hex(255, 0, 0, 0.5))
+
 
 @dataclass
 class BaseDrawing:
@@ -53,7 +62,8 @@ class BaseDrawing:
     transparency: float = 1.0
 
     def get_svg_circle(self):
-        return f'<circle cx="{self.centre.x}" cy="{self.centre.y}" r="{self.radius}" fill="rgba({self.color[0]},{self.color[1]},{self.color[2]},{self.transparency:.2f})"/>\n'
+        colour = rgba_to_flat_hex(self.color[0], self.color[1], self.color[2], self.transparency)
+        return f'<circle cx="{self.centre.x}" cy="{self.centre.y}" r="{self.radius}" fill="{colour}"/>\n'
 
 
 @dataclass
