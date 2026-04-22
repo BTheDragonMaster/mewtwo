@@ -82,10 +82,12 @@ def train_random_forest(train_terminators: list[Terminator], test_terminators: l
             out.write(f"{random_forest.score(test_x, test_y):.10f}\t{pearsonr(random_forest.predict(test_x), test_y).statistic:.10f}\t{spearmanr(random_forest.predict(test_x), test_y).statistic}")
 
         with open(datapoints_out, 'w') as out:
-            out.write(f"actual\tpredicted\n")
+            out.write(f"sequence\tspecies\tis_synthetic\tactual\tpredicted\n")
             for i, prediction in enumerate(random_forest.predict(test_x)):
+                test_terminator = test_terminators[i]
+
                 true_label = test_y[i]
-                out.write(f"{true_label}\t{prediction}\n")
+                out.write(f"{test_terminator.sequence}\t{test_terminator.species}\t{test_terminator.is_synthetic}\t{true_label}\t{prediction}\n")
     return random_forest
 
 

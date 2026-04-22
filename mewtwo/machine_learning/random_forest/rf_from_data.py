@@ -6,11 +6,13 @@ from joblib import dump
 
 from mewtwo.parsers.parse_data_chen import get_chen_terminators
 from mewtwo.machine_learning.data_preparation.train_test_split import split_data
+from mewtwo.machine_learning.analysis.get_performance_rf import write_average_performance
 from mewtwo.machine_learning.random_forest.train_random_forest import train_random_forest, RandomForestMode, \
     FeaturisationMode
 from mewtwo.machine_learning.feature_inference.infer_features_rf import write_average_importances
 from mewtwo.parsers.parse_termite_output import get_termite_terminators
 from mewtwo.embeddings.terminator.draw_terminator import visualise_feature_importances
+from mewtwo.machine_learning.analysis.plot_performance import plot_actual_vs_predicted, Attribute
 
 
 class DataSource(Enum):
@@ -25,11 +27,11 @@ def parse_arguments() -> Namespace:
     parser.add_argument("-d", type=str, default="CHEN", help="Data source. Must be CHEN or TERMITE")
     parser.add_argument("-m", type=str, default="FULL", help="Random forest training mode. Must be one of \
     'FULL', 'TRAIN', or 'CROSSVALIDATION'.")
-    parser.add_argument("-a", type=str, default="is_synthetic", help="Attribute for stratified data splitting")
+    parser.add_argument("-a", type=str, default=None, help="Attribute for stratified data splitting")
     parser.add_argument("-f", type=str, default="ONE_HOT", help="Featurisation mode. Must be one of 'ONE_HOT' or \
     'PURINE_PYRIMIDINE'.")
     parser.add_argument("-s", action="store_true", help="If given, save random forest models.")
-    parser.add_argument("-n", type=int, default=100, help="Number of trees in RF")
+    parser.add_argument("-n", type=int, default=1000, help="Number of trees in RF")
 
     args = parser.parse_args()
     return args
@@ -44,6 +46,8 @@ def rf_from_data(data_file: str, data_source: DataSource, out_dir: str, attribut
         terminators = get_termite_terminators(data_file, species_column=True)
     else:
         raise ValueError(f"Unknown data source: {data_source.name}")
+
+    print("Total number of terminators: ", len(terminators))
 
     train_terminators, test_terminators, crossvalidation_sets = split_data(terminators,
                                                                            attribute_for_splitting=attribute)
@@ -66,8 +70,10 @@ def rf_from_data(data_file: str, data_source: DataSource, out_dir: str, attribut
                 dump(rf, model_path)
 
         averaged_features_dir = os.path.join(out_dir, "average_feature_importances.txt")
+        averaged_performance_file = os.path.join(out_dir, "average_performance.txt")
 
         write_average_importances(out_dir, averaged_features_dir)
+        write_average_performance(out_dir, averaged_performance_file)
         visualise_feature_importances(averaged_features_dir, figure_dir)
 
     if RandomForestMode.TRAIN in mode:
@@ -79,6 +85,11 @@ def rf_from_data(data_file: str, data_source: DataSource, out_dir: str, attribut
             dump(rf, model_path)
 
         visualise_feature_importances(os.path.join(out_dir, "feature_importances.txt"), figure_dir)
+        if data_source == DataSource.CHEN:
+            attribute = Attribute.IS_SYNTHETIC
+        else:
+            attribute = Attribute.SPECIES
+        plot_actual_vs_predicted(os.path.join(out_dir, "actual_vs_predicted.txt"), attribute, os.path.join(out_dir, "actual_vs_predicted.svg"))
 
 
 def main():
